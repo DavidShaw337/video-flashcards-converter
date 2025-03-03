@@ -17,6 +17,10 @@ export default function handleRequest(
   loadContext: AppLoadContext
 ) {
   return new Promise((resolve, reject) => {
+    // set, append global headers
+    responseHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
+    responseHeaders.set("Cross-Origin-Embedder-Policy", "require-corp");
+    //
     let shellRendered = false;
     let userAgent = request.headers.get("user-agent");
 
