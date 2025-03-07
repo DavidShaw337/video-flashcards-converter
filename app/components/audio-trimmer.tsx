@@ -35,9 +35,10 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
     }, [audioBuffer])
 
     useEffect(() => {
+        if (!audioBuffer) return
         if (!overlayCanvasRef.current) return
         drawOverlay(min, max, start, end, overlayCanvasRef.current)
-    }, [min, max, start, end])
+    }, [audioBuffer, min, max, start, end])
 
     const handleOverlayCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
         if (!overlayCanvasRef.current || !audioRef.current) return
@@ -55,11 +56,13 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
             //play audio
             audioRef.current.currentTime = roundedTime - min
             audioRef.current.play()
+            animateMarker(roundedTime, end)
         } else {
             setEnd(roundedTime)
             //play audio
             audioRef.current.currentTime = start - min
             audioRef.current.play()
+            animateMarker(start, roundedTime)
         }
     }
 
@@ -81,16 +84,17 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
         }
     }, [pauseAudioAtEnd])
 
-    useEffect(() => {
+    const animationFrameRef = useRef<number>(null) // Store reference to the animation frame
+    const animateMarker = (start: number, end: number) => {
         if (!markerCanvasRef.current) return
         const canvas = markerCanvasRef.current
         const ctx = canvas.getContext('2d')
-        const duration =  max - min
+        const duration = max - min
         const startPercent = (start - min) / duration
         const endPercent = (end - min) / duration
         const xStart = startPercent * canvas.width
         const xEnd = endPercent * canvas.width
-        const step = canvas.width / (60*duration)
+        const step = canvas.width / (60 * duration)
 
         let xCurrent = xStart // Starting point of the bar
         const animate = () => {
@@ -101,11 +105,15 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
             // Move the bar to the right
             if (xCurrent < xEnd) {
                 xCurrent += step
-                requestAnimationFrame(animate) // Request the next animation frame
+                animationFrameRef.current = requestAnimationFrame(animate) // Request the next animation frame
             }
         }
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current)
+            animationFrameRef.current = null
+        }
         animate() // Start the animation
-    }, [min, max, start, end])
+    }
 
     const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const time = Number(e.target.value)
@@ -113,6 +121,7 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
         if (audioRef.current) {
             audioRef.current.currentTime = time - min
             audioRef.current.play()
+            animateMarker(time, end)
         }
     }
 
@@ -122,26 +131,27 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
         if (audioRef.current) {
             audioRef.current.currentTime = start - min
             audioRef.current.play()
+            animateMarker(start, time)
         }
     }
 
     return (
         <div>
-            <h1>Audio Trimmer</h1>
-            {audioUrl && <audio ref={audioRef} controls src={audioUrl} />}
-
+            {audioUrl && <audio ref={audioRef} src={audioUrl} />}
             <div style={{ position: 'relative', width: '600px', height: '100px' }}>
                 <canvas ref={waveformCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
                 <canvas ref={overlayCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
                 <canvas ref={markerCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} onClick={handleOverlayCanvasClick} />
             </div>
-            <div>
-                <label>Start: </label>
-                <input type="number" step="0.1" value={start} onChange={handleStartChange} />
-            </div>
-            <div>
-                <label>End: </label>
-                <input type="number" step="0.1" value={end} onChange={handleEndChange} />
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ flex: 1, marginRight: '20px' }}>
+                    <label>Start: </label>
+                    <input type="number" style={{ maxWidth: '5em' }} step="0.1" value={start} onChange={handleStartChange} />
+                </div>
+                <div style={{ flex: 1 }}>
+                    <label>End: </label>
+                    <input type="number" style={{ maxWidth: '5em' }} step="0.1" value={end} onChange={handleEndChange} />
+                </div>
             </div>
         </div>
     )

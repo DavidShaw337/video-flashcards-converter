@@ -53,7 +53,7 @@ const convertTimeToSeconds = (time: string): number => {
         parseInt(hours) * 3600 +
         parseInt(minutes) * 60 +
         parseInt(secs) +
-        parseInt(millis) / 1000
+        Math.round(parseInt(millis) / 100) / 10//round to 1 decimal place
     );
 };
 
@@ -64,5 +64,5 @@ interface Subtitle {
     text: string;
 }
 
-export { convertSubtitleFiles  };
+export { convertSubtitleFiles };
 

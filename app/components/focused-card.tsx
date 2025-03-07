@@ -65,8 +65,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcard, setFlashc
                 <br />
                 <h3>Audio</h3>
                 <AudioTrimmer
-                    min={flashcard.originalStartTime - 3}
-                    max={flashcard.originalEndTime + 3}
+                    min={flashcard.originalStartTime - 2}
+                    max={flashcard.originalEndTime + 2}
                     start={flashcard.selectedStartTime || flashcard.originalStartTime}
                     end={flashcard.selectedEndTime || flashcard.originalEndTime}
                     setStart={(start) => setFlashcard({ ...flashcard, selectedStartTime: start })}
