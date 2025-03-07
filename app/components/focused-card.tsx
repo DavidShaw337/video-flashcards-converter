@@ -5,13 +5,13 @@ import AudioTrimmer from "./audio-trimmer"
 
 interface CardProps {
     video: File
-    audio: string
-    audioBuffer: AudioBuffer
+    // audio: string
+    // audioBuffer: AudioBuffer
     flashcard: Flashcard
     setFlashcard: (flashcard: Flashcard) => void
 }
 
-const FocusedCard: FunctionComponent<CardProps> = ({ video, audio, audioBuffer, flashcard, setFlashcard }) => {
+const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcard, setFlashcard }) => {
     const videoRef = useRef<HTMLVideoElement | null>(null)
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -65,37 +65,13 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, audio, audioBuffer, 
                 <br />
                 <h3>Audio</h3>
                 <AudioTrimmer
-                    audioUrl={audio}
-                    audioBuffer={audioBuffer}
-                    min={flashcard.originalStartTime - 5}
-                    max={flashcard.originalEndTime + 5}
+                    min={flashcard.originalStartTime - 3}
+                    max={flashcard.originalEndTime + 3}
                     start={flashcard.selectedStartTime || flashcard.originalStartTime}
                     end={flashcard.selectedEndTime || flashcard.originalEndTime}
                     setStart={(start) => setFlashcard({ ...flashcard, selectedStartTime: start })}
                     setEnd={(end) => setFlashcard({ ...flashcard, selectedEndTime: end })}
                 />
-                {/* <input
-                    type="range"
-                    min={flashcard.originalStartTime - 3}
-                    max={flashcard.originalStartTime + 3}
-                    step="0.1"
-                    value={flashcard.selectedStartTime || flashcard.originalStartTime}
-                    onChange={handleStartTimeChange}
-                />
-                <span>{(flashcard.selectedStartTime || flashcard.originalStartTime).toFixed(1)}s</span>
-                <br />
-                <input
-                    type="range"
-                    min={flashcard.originalEndTime - 3}
-                    max={flashcard.originalEndTime + 3}
-                    step="0.1"
-                    value={flashcard.selectedEndTime || flashcard.originalEndTime}
-                    onChange={handleEndTimeChange}
-                />
-                <span>{(flashcard.selectedEndTime || flashcard.originalEndTime).toFixed(1)}s</span>
-                <br /> */}
-                {/* {audio && <audio ref={audioRef} controls src={audio} />} */}
-                {/* <canvas ref={visualizerCanvasRef} width="320" height="100" style={{ width: "100%", marginTop: "10px" }} /> */}
             </div>
             <div style={{ flex: "1 1 33%", paddingLeft: "10px" }}>
                 <p>{flashcard.source}</p>

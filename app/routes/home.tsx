@@ -3,7 +3,7 @@ import Card from '~/components/card'
 import FocusedCard from '~/components/focused-card'
 import type { Flashcard } from "~/interfaces"
 import { convertSubtitleFiles } from '~/utils/subtitle-utils'
-import { extractAudio } from '~/utils/ffmpeg-utils'
+import { extractAudio, setVideo } from '~/utils/ffmpeg-utils'
 import type { Route } from "./+types/home"
 
 export function meta({ }: Route.MetaArgs) {
@@ -15,8 +15,8 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function Home() {
 	const [videoFile, setVideoFile] = useState<File | null>(null)
-	const [audioFile, setAudioFile] = useState<string | null>(null)
-	const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
+	// const [audioFile, setAudioFile] = useState<string | null>(null)
+	// const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
 	const [sourceSubtitleFile, setSourceSubtitleFile] = useState<File | null>(null)
 	const [targetSubtitleFile, setTargetSubtitleFile] = useState<File | null>(null)
 	const [flashcards, setFlashcards] = useState<Flashcard[]>([])
@@ -26,6 +26,7 @@ export default function Home() {
 		if (event.target.files && event.target.files.length > 0) {
 			const file = event.target.files[0]
 			setVideoFile(file)
+			await setVideo(file)
 		}
 	}
 
@@ -43,16 +44,16 @@ export default function Home() {
 		}
 	}
 
-	useEffect(() => {
-		const fetchAudio = async () => {
-			if (videoFile) {
-				const { audioUrl, audioBuffer } = await extractAudio(videoFile)
-				setAudioFile(audioUrl)
-				setAudioBuffer(audioBuffer)
-			}
-		}
-		fetchAudio()
-	}, [videoFile])
+	// useEffect(() => {
+	// 	const fetchAudio = async () => {
+	// 		if (videoFile) {
+	// 			const { audioUrl, audioBuffer } = await extractAudio(videoFile)
+	// 			setAudioFile(audioUrl)
+	// 			setAudioBuffer(audioBuffer)
+	// 		}
+	// 	}
+	// 	fetchAudio()
+	// }, [videoFile])
 
 	useEffect(() => {
 		const fetchSubtitles = async () => {
@@ -92,13 +93,13 @@ export default function Home() {
 			<br />
 			<input type="file" accept=".srt,.vtt,.ass,.ssa" onChange={handleTargetSubtitleFileChange} />
 			<br />
-			{videoFile && audioFile&&audioBuffer  && flashcards.slice(0, 10).map((flashcard, index) => (
+			{videoFile  && flashcards.slice(0, 10).map((flashcard, index) => (
 				<div key={index} onClick={() => handleCardClick(index)}>
 					{focusedCard === index ? (
 						<FocusedCard
 							video={videoFile}
-							audio={audioFile}
-							audioBuffer={audioBuffer}
+							// audio={audioFile}
+							// audioBuffer={audioBuffer}
 							flashcard={flashcard}
 							setFlashcard={(updatedFlashcard) => setFlashcard(index, updatedFlashcard)}
 						/>

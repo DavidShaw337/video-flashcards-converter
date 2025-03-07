@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { extractAudio } from '~/utils/ffmpeg-utils'
 import { drawOverlay, drawWaveform } from '~/utils/waveform-utils'
 
 interface AudioTrimmerProps {
-    audioUrl: string
-    audioBuffer: AudioBuffer
     min: number
     max: number
     start: number
@@ -12,19 +11,28 @@ interface AudioTrimmerProps {
     setEnd: (value: number) => void
 }
 
-const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ audioUrl, audioBuffer, min, max, start, setStart, end, setEnd }) => {
+const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, end, setEnd }) => {
+    const [audioUrl, setAudio] = useState<string | null>(null)
+    const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
     const audioRef = useRef<HTMLAudioElement>(null)
     const waveformCanvasRef = useRef<HTMLCanvasElement>(null)
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null)
+    const markerCanvasRef = useRef<HTMLCanvasElement>(null)
 
     useEffect(() => {
-        if (!waveformCanvasRef.current) return
-        const sampleRate = audioBuffer.sampleRate
-        const startSample = Math.floor(min * sampleRate)
-        const endSample = Math.floor(max * sampleRate)
-        const channelData = audioBuffer.getChannelData(0).slice(startSample, endSample)
-        drawWaveform(channelData, waveformCanvasRef.current)
+        const extractAndSetAudio = async () => {
+            const { audioUrl, audioBuffer } = await extractAudio(min, max)
+            setAudio(audioUrl)
+            setAudioBuffer(audioBuffer)
+        }
+        extractAndSetAudio()
     }, [min, max])
+
+    useEffect(() => {
+        if (!waveformCanvasRef.current || !audioBuffer) return
+        const channelData = audioBuffer.getChannelData(0)
+        drawWaveform(channelData, waveformCanvasRef.current)
+    }, [audioBuffer])
 
     useEffect(() => {
         if (!overlayCanvasRef.current) return
@@ -45,23 +53,21 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ audioUrl, audioBuffer, min,
         if (roundedTime < midPoint) {
             setStart(roundedTime)
             //play audio
-            audioRef.current.currentTime = roundedTime
+            audioRef.current.currentTime = roundedTime - min
             audioRef.current.play()
         } else {
             setEnd(roundedTime)
             //play audio
-            audioRef.current.currentTime = start
+            audioRef.current.currentTime = start - min
             audioRef.current.play()
         }
-
     }
 
     const pauseAudioAtEnd = useCallback(() => {
-        // console.log(`Current time: ${audioRef.current?.currentTime}, End time: ${end}`)
-        if (audioRef.current && audioRef.current.currentTime >= end) {
+        if (audioRef.current && audioRef.current.currentTime >= end - min) {
             audioRef.current.pause()
         }
-    }, [end])
+    }, [min, end])
 
     useEffect(() => {
         if (!audioRef.current) return
@@ -73,13 +79,39 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ audioUrl, audioBuffer, min,
                 audioRef.current.removeEventListener('timeupdate', pauseAudioAtEnd)
             }
         }
-    }, [start, pauseAudioAtEnd])
+    }, [pauseAudioAtEnd])
+
+    useEffect(() => {
+        if (!markerCanvasRef.current) return
+        const canvas = markerCanvasRef.current
+        const ctx = canvas.getContext('2d')
+        const duration =  max - min
+        const startPercent = (start - min) / duration
+        const endPercent = (end - min) / duration
+        const xStart = startPercent * canvas.width
+        const xEnd = endPercent * canvas.width
+        const step = canvas.width / (60*duration)
+
+        let xCurrent = xStart // Starting point of the bar
+        const animate = () => {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height) // Clear previous frames
+            ctx.fillStyle = 'red' // Set the fill color to red
+            ctx.fillRect(xCurrent, 0, 1, canvas.height) // Draw the bar at currentX position
+            // Move the bar to the right
+            if (xCurrent < xEnd) {
+                xCurrent += step
+                requestAnimationFrame(animate) // Request the next animation frame
+            }
+        }
+        animate() // Start the animation
+    }, [min, max, start, end])
 
     const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const time = Number(e.target.value)
         setStart(time)
         if (audioRef.current) {
-            audioRef.current.currentTime = time
+            audioRef.current.currentTime = time - min
             audioRef.current.play()
         }
     }
@@ -88,7 +120,7 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ audioUrl, audioBuffer, min,
         const time = Number(e.target.value)
         setEnd(time)
         if (audioRef.current) {
-            audioRef.current.currentTime = start
+            audioRef.current.currentTime = start - min
             audioRef.current.play()
         }
     }
@@ -96,11 +128,12 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ audioUrl, audioBuffer, min,
     return (
         <div>
             <h1>Audio Trimmer</h1>
-            <audio ref={audioRef} controls src={audioUrl} />
+            {audioUrl && <audio ref={audioRef} controls src={audioUrl} />}
 
             <div style={{ position: 'relative', width: '600px', height: '100px' }}>
                 <canvas ref={waveformCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
-                <canvas ref={overlayCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} onClick={handleOverlayCanvasClick} />
+                <canvas ref={overlayCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
+                <canvas ref={markerCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} onClick={handleOverlayCanvasClick} />
             </div>
             <div>
                 <label>Start: </label>
