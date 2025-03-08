@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Card from '~/components/card'
 import FocusedCard from '~/components/focused-card'
 import type { Flashcard } from "~/interfaces"
+import { setVideo } from '~/utils/ffmpeg-utils'
 import { convertSubtitleFiles } from '~/utils/subtitle-utils'
-import { extractAudio, setVideo } from '~/utils/ffmpeg-utils'
 import type { Route } from "./+types/home"
 
 export function meta({ }: Route.MetaArgs) {
@@ -15,11 +15,11 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function Home() {
 	const [videoFile, setVideoFile] = useState<File | null>(null)
-	// const [audioFile, setAudioFile] = useState<string | null>(null)
-	// const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
 	const [sourceSubtitleFile, setSourceSubtitleFile] = useState<File | null>(null)
 	const [targetSubtitleFile, setTargetSubtitleFile] = useState<File | null>(null)
 	const [flashcards, setFlashcards] = useState<Flashcard[]>([])
+	const startOffset = useRef(0)
+	const endOffset = useRef(0)
 	const [focusedCard, setFocusedCard] = useState<number | null>(null)
 
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,17 +44,6 @@ export default function Home() {
 		}
 	}
 
-	// useEffect(() => {
-	// 	const fetchAudio = async () => {
-	// 		if (videoFile) {
-	// 			const { audioUrl, audioBuffer } = await extractAudio(videoFile)
-	// 			setAudioFile(audioUrl)
-	// 			setAudioBuffer(audioBuffer)
-	// 		}
-	// 	}
-	// 	fetchAudio()
-	// }, [videoFile])
-
 	useEffect(() => {
 		const fetchSubtitles = async () => {
 			if (sourceSubtitleFile && targetSubtitleFile) {
@@ -78,6 +67,28 @@ export default function Home() {
 			return newFlashcards
 		})
 	}
+	useEffect(() => {
+		let sOffset = 0
+		let sCount = 0
+		let eOffset = 0
+		let eCount = 0
+		for (const flashcard of flashcards) {
+			if (flashcard.selectedStartTime) {
+				sOffset += flashcard.selectedStartTime - flashcard.originalStartTime
+				sCount++
+			}
+			if (flashcard.selectedEndTime) {
+				eOffset += flashcard.selectedEndTime - flashcard.originalEndTime
+				eCount++
+			}
+		}
+		if (sCount > 0) {
+			startOffset.current = Math.round(sOffset / sCount * 10) / 10
+		}
+		if (eCount > 0) {
+			endOffset.current = Math.round(eOffset / eCount * 10) / 10
+		}
+	}, [flashcards])
 
 	return (
 		<div>
@@ -93,14 +104,14 @@ export default function Home() {
 			<br />
 			<input type="file" accept=".srt,.vtt,.ass,.ssa" onChange={handleTargetSubtitleFileChange} />
 			<br />
-			{videoFile  && flashcards.slice(0, 10).map((flashcard, index) => (
+			{videoFile && flashcards.slice(0, 10).map((flashcard, index) => (
 				<div key={index} onClick={() => handleCardClick(index)}>
 					{focusedCard === index ? (
 						<FocusedCard
 							video={videoFile}
-							// audio={audioFile}
-							// audioBuffer={audioBuffer}
 							flashcard={flashcard}
+							startOffset={startOffset}
+							endOffset={endOffset}
 							setFlashcard={(updatedFlashcard) => setFlashcard(index, updatedFlashcard)}
 						/>
 					) : (

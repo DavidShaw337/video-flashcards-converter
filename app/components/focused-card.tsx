@@ -1,19 +1,21 @@
 import type { FunctionComponent } from "react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { Flashcard } from "~/interfaces"
 import AudioTrimmer from "./audio-trimmer"
 
 interface CardProps {
     video: File
-    // audio: string
-    // audioBuffer: AudioBuffer
     flashcard: Flashcard
+    startOffset: React.RefObject<number>
+    endOffset: React.RefObject<number>
     setFlashcard: (flashcard: Flashcard) => void
 }
 
-const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcard, setFlashcard }) => {
+const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcard, startOffset, endOffset, setFlashcard }) => {
     const videoRef = useRef<HTMLVideoElement | null>(null)
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
+    const [cachedStartOffset] = useState(startOffset.current)
+    const [cachedEndOffset] = useState(endOffset.current)
 
     const handleImageTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const time = parseFloat(event.target.value)
@@ -65,10 +67,10 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcard, setFlashc
                 <br />
                 <h3>Audio</h3>
                 <AudioTrimmer
-                    min={flashcard.originalStartTime - 2}
-                    max={flashcard.originalEndTime + 2}
-                    start={flashcard.selectedStartTime || flashcard.originalStartTime}
-                    end={flashcard.selectedEndTime || flashcard.originalEndTime}
+                    min={flashcard.originalStartTime + cachedStartOffset - 2}
+                    max={flashcard.originalEndTime + cachedEndOffset + 2}
+                    start={flashcard.selectedStartTime || (flashcard.originalStartTime + cachedStartOffset)}
+                    end={flashcard.selectedEndTime || (flashcard.originalEndTime + cachedEndOffset)}
                     setStart={(start) => setFlashcard({ ...flashcard, selectedStartTime: start })}
                     setEnd={(end) => setFlashcard({ ...flashcard, selectedEndTime: end })}
                 />
