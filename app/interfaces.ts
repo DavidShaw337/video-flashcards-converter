@@ -6,6 +6,7 @@ export interface Flashcard {
     originalImageTime:number
     selectedImageTime:number
     source:string
-    target:string
+    furigana:string
+    translation:string
     notes:string
 }

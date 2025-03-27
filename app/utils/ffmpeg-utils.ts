@@ -1,5 +1,5 @@
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg"
-const ffmpeg = createFFmpeg({ log: true })
+const ffmpeg = createFFmpeg({ log: false })
 
 const setVideo = async (video: File) => {
     if (!ffmpeg.isLoaded()) {
@@ -17,7 +17,7 @@ const extractAudio = async (min: number, max: number) => {
     while (extractAudioRunning) {
         await new Promise(resolve => setTimeout(resolve, 100)) // Wait for 100ms before checking again
     }
-    if (latestExtractAudioStarted > started) return { audioUrl:null, audioBuffer:null}
+    if (latestExtractAudioStarted > started) return {}
     extractAudioRunning = true
 
     let startTime = Date.now()
@@ -44,22 +44,40 @@ const extractAudio = async (min: number, max: number) => {
         )
 
         const data = ffmpeg.FS("readFile", "output.mp3")
-        const audioUrl = URL.createObjectURL(new Blob([data.buffer], { type: "audio/mp3" }))
+        const audioFile = new Blob([data.buffer], { type: "audio/mp3" })
+        const audioUrl = URL.createObjectURL(audioFile)
         let duration = (Date.now() - startTime) / 1000
         console.log(`[DEBUG] audioUrl: ${(data.length / (1024 * 1024)).toFixed(2)} MB, Time: ${duration.toFixed(2)}s`)
 
         // Decode the MP3 data into an AudioBuffer and extract the channel data
-        // startTime = Date.now()
         const audioContext = new AudioContext()
         const audioBuffer = await audioContext.decodeAudioData(data.buffer)
-        // duration = (Date.now() - startTime) / 1000
-        // console.log(`[DEBUG] audioBuffer: ${(audioBuffer.length / (1024 * 1024)).toFixed(2)} MB, Time: ${duration.toFixed(2)}s`)
 
-        return { audioUrl, audioBuffer }
+        return { audioFile, audioUrl, audioBuffer }
     } finally {
         extractAudioRunning = false
     }
 }
 
-export { extractAudio, setVideo }
+const extractImage = async (time: number) => {
+    // Load FFmpeg
+    if (!ffmpeg.isLoaded()) {
+        await ffmpeg.load()
+    }
+    // Extract the screenshot at the given time
+    await ffmpeg.run(
+        '-i', "input.mp4",
+        '-ss', time.toString(),
+        '-vframes', '1',
+        '-q:v', '10',  // Lower quality (higher value = lower quality)
+        '-s', '640x360', // Reduce resolution (you can adjust this size as needed)
+        'output.png'
+    )
+    // Read the screenshot file from FFmpeg virtual filesystem
+    const image = ffmpeg.FS('readFile', 'output.png')
+    const imageBlob = new Blob([image.buffer], { type: 'image/png' })
+    return imageBlob
+};
+
+export { extractAudio, extractImage, setVideo }
 

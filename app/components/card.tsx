@@ -9,7 +9,7 @@ const Card: FunctionComponent<CardProps> = ({ subtitle }) => {
     return (
         <div style={{ border: "1px solid black", padding: "10px", margin: "10px", display: "flex", justifyContent: "space-between" }}>
             <p>{subtitle.source}</p>
-            <p>{subtitle.target}</p>
+            <p>{subtitle.translation}</p>
         </div>
     )
 }

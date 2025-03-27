@@ -77,7 +77,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcard, startOffs
             </div>
             <div style={{ flex: "1 1 33%", paddingLeft: "10px" }}>
                 <p>{flashcard.source}</p>
-                <p>{flashcard.target}</p>
+                <p>{flashcard.furigana}</p>
+                <p>{flashcard.translation}</p>
             </div>
         </div>
     )
