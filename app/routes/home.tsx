@@ -22,8 +22,6 @@ export default function Home() {
 	const [videoName, setVideoName] = useState<string>("Video")
 	const [videoFile, setVideoFile] = useState<File | null>(null)
 	const [sourceSubtitleFile, setSourceSubtitleFile] = useState<File | null>(null)
-	const [furiganaSubtitleFile, setFuriganaSubtitleFile] = useState<File | null>(null)
-	const [targetSubtitleFile, setTargetSubtitleFile] = useState<File | null>(null)
 	const [flashcards, setFlashcards] = useState<Flashcard[]>([])
 	const startOffset = useRef(0)
 	const endOffset = useRef(0)
@@ -43,31 +41,18 @@ export default function Home() {
 			setSourceSubtitleFile(file)
 		}
 	}
-	const handleFuriganaSubtitleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (event.target.files && event.target.files.length > 0) {
-			const file = event.target.files[0]
-			setFuriganaSubtitleFile(file)
-		}
-	}
-
-	const handleTargetSubtitleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (event.target.files && event.target.files.length > 0) {
-			const file = event.target.files[0]
-			setTargetSubtitleFile(file)
-		}
-	}
 
 	useEffect(() => {
 		const fetchSubtitles = async () => {
-			if (sourceSubtitleFile && targetSubtitleFile && (furiganaSubtitleFile || sourceLanguage !== "ja")) {
-				const flashcards = await convertSubtitleFiles(sourceSubtitleFile, furiganaSubtitleFile, targetSubtitleFile)
+			if (sourceSubtitleFile) {
+				const flashcards = await convertSubtitleFiles(sourceSubtitleFile)
 				setFlashcards(flashcards)
 				console.log(flashcards)
 			}
 		}
 
 		fetchSubtitles()
-	}, [sourceSubtitleFile, furiganaSubtitleFile, targetSubtitleFile])
+	}, [sourceSubtitleFile])
 
 	const handleCardClick = (index: number) => {
 		setFocusedCard(index)
@@ -133,22 +118,13 @@ export default function Home() {
 			<br />
 			<input type="file" accept=".srt,.vtt,.ass,.ssa" onChange={handleSourceSubtitleFileChange} />
 			<br />
-			{sourceLanguage === "ja" && <>
-				<label>Select a subtitle file with Furigana:</label>
-				<br />
-				<input type="file" accept=".srt,.vtt,.ass,.ssa" onChange={handleFuriganaSubtitleFileChange} />
-				<br />
-			</>}
-			<label>Select a subtitle file in the target language:</label>
-			<br />
-			<input type="file" accept=".srt,.vtt,.ass,.ssa" onChange={handleTargetSubtitleFileChange} />
-			<br />
 			{videoFile && flashcards.map((flashcard, index) => (
 				<div key={index} onClick={() => handleCardClick(index)}>
 					{focusedCard === index ? (
 						<FocusedCard
 							video={videoFile}
-							flashcard={flashcard}
+							flashcards={flashcards}
+							flashcardIndex={index}
 							startOffset={startOffset}
 							endOffset={endOffset}
 							setFlashcard={(updatedFlashcard) => setFlashcard(index, updatedFlashcard)}

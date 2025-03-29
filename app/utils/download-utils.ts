@@ -19,13 +19,13 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
     for (let i = 0; i < flashcards.length; i++) {
         console.log(`[DEBUG] Processing flashcard ${i + 1} of ${flashcards.length}`)
         const flashcard = flashcards[i]
-        const time =  flashcard.originalStartTime.toFixed(2).padStart(8, '0')
+        const time = flashcard.originalStartTime.toFixed(2).padStart(8, '0')
         //
-        const imageName = `${deckName}_${videoName}_${time.replace(".","")}.png`
+        const imageName = `${deckName}_${videoName}_${time.replace(".", "")}.png`
         const imageBlob = await extractImage(flashcard.selectedImageTime || flashcard.originalImageTime)
         zip.file(imageName, imageBlob)
         //
-        const audioName = `${deckName}_${videoName}_${time.replace(".","")}.mp3`
+        const audioName = `${deckName}_${videoName}_${time.replace(".", "")}.mp3`
         const { audioFile } = await extractAudio(flashcard.selectedStartTime || flashcard.originalStartTime, flashcard.selectedEndTime || flashcard.originalEndTime)
         zip.file(audioName, audioFile!)
         //
@@ -34,9 +34,9 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
         csvContent += `[sound:${audioName}];`
         csvContent += `"${flashcard.source.replace(/"/g, '""')}";`
         if (sourceLanguage === "ja") {
-            csvContent += `"${flashcard.furigana?.replace(/"/g, '""')}";`
+            csvContent += `"${(flashcard.furigana || "").replace(/"/g, '""')}";`
         }
-        csvContent += `"${flashcard.translation.replace(/"/g, '""')}";`
+        csvContent += `"${(flashcard.translation || "").replace(/"/g, '""')}";`
         csvContent += `"${(flashcard.notes || "").replace(/"/g, '""')}"\n`
     }
     //
@@ -145,7 +145,7 @@ const getAnkiInstructions = (deckName: string, sourceLanguage: string) => {
         `Step 2: Import into Anki\n` +
         `1. Open the collection.media folder at Tools > Check Media > View Files\n` +
         `2. Drag the images and audio files into the folder (not the csv or txt files)\n` +
-        `3. Drag import.csv somewhere outside the zip folder\n`+
+        `3. Drag import.csv somewhere outside the zip folder\n` +
         `4. Select "Import File" and select import.csv\n` +
         `5. Make sure everything is correct and select "Import"`
     return instructions
