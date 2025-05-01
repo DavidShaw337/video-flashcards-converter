@@ -8,6 +8,10 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:5000', // Proxy API requests to Express
     },
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp', // Set the COEP header
+      'Cross-Origin-Opener-Policy': 'same-origin', // Set the COOP header
+    },
   },
   build: {
     outDir: '../dist', // Output directory for the build
