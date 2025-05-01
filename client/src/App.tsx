@@ -7,6 +7,8 @@ import FocusedCard from "./components/focused-card"
 import { downloadFlashcards } from "./utils/download-utils"
 import Card from "./components/card"
 import "normalize.css"
+import "./index.css"
+
 
 export default function App() {
 	const [sourceLanguage, setSourceLanguage] = useState<string>("ja")

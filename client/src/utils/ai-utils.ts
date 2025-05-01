@@ -42,7 +42,7 @@ const parseResponse = (response: string) => {
             furigana = line.replace('furigana:', '').trim()
         } else if (line.startsWith('translation:')) {
             currentKey = 'translation'
-            translation = line.replace('translation: ', '').trim()
+            translation = line.replace('translation:', '').trim()
         } else if (line.startsWith('notes:')) {
             currentKey = 'notes'
             notes = line.replace('notes:', '').trim()
