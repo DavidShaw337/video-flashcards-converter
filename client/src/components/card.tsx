@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "react"
-import type { Flashcard } from "~/interfaces"
+import { Flashcard } from "../interfaces"
 
 interface CardProps {
     subtitle: Flashcard

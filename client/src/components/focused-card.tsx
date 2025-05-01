@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "react"
 import { useEffect, useRef, useState } from "react"
-import type { Flashcard } from "~/interfaces"
+import { Flashcard } from "../interfaces"
 import AudioTrimmer from "./audio-trimmer"
 import ManualAIModal from "./manual-ai-modal"
 

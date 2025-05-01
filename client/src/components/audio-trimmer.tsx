@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { extractAudio } from '~/utils/ffmpeg-utils'
-import { drawOverlay, drawWaveform } from '~/utils/waveform-utils'
+import { extractAudio } from '../utils/ffmpeg-utils'
+import { drawOverlay, drawWaveform } from '../utils/waveform-utils'
 
 interface AudioTrimmerProps {
     min: number
@@ -12,8 +12,8 @@ interface AudioTrimmerProps {
 }
 
 const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, end, setEnd }) => {
-    const [audioUrl, setAudio] = useState<string | null>(null)
-    const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
+    const [audioUrl, setAudio] = useState<string | undefined>()
+    const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | undefined>()
     const audioRef = useRef<HTMLAudioElement>(null)
     const waveformCanvasRef = useRef<HTMLCanvasElement>(null)
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null)

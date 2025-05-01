@@ -1,4 +1,4 @@
-import type { Flashcard } from "~/interfaces"
+import { Flashcard } from "../interfaces"
 import { roundToFixed } from "./math-utils"
 
 const convertSubtitleFiles = async (sourceFile: File): Promise<Flashcard[]> => {

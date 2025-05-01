@@ -1,4 +1,4 @@
-import type { Flashcard } from "~/interfaces"
+import { Flashcard } from "../interfaces"
 import { formatAnkiFurigana } from "./furigana-utils"
 
 const makeManualPrompt = (flashcards: Flashcard[], index: number) => {
@@ -8,7 +8,7 @@ const makeManualPrompt = (flashcards: Flashcard[], index: number) => {
         `Source Subtitle: ${flashcards[index].source}\n` +
         (index < flashcards.length - 1 ? `Next Subtitle (do not include in notes): ${flashcards[index + 1].source}\n` : ``) +
         `Add furigana after every Kanji character in the source subtitle. e.g. 世界[せかい] ` +
-        `If there are multiple possible readings and it isn't clear from context, use the more common one.\n`+
+        `If there are multiple possible readings and it isn't clear from context, use the more common one.\n` +
         `Translate the source subtitle into English.\n` +
         `Give 1-3 short notes explaining any uncommon words or words used in uncommon ways in the source subtitle. Do not give notes about words in the previous or next subtitles! ` +
         `Focus on any words with connotations beyond their dictionary definition, or words with multiple possible meanings, or uncommon word choice. ` +

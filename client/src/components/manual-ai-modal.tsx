@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FunctionComponent } from "react"
 import { FaClipboard, FaClipboardCheck } from "react-icons/fa"
-import type { Flashcard } from "~/interfaces"
-import { makeManualPrompt, parseResponse } from "~/utils/ai-utils"
+import { Flashcard } from "../interfaces"
+import { makeManualPrompt, parseResponse } from "../utils/ai-utils"
 
 interface IManualAIModal {
     open: boolean

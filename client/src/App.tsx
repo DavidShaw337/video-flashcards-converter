@@ -1,21 +1,14 @@
 import { useEffect, useRef, useState } from "react"
-import Card from '~/components/card'
-import FocusedCard from '~/components/focused-card'
-import LanguageSelector from "~/components/language-selector"
-import type { Flashcard } from "~/interfaces"
-import { downloadFlashcards } from "~/utils/download-utils"
-import { setVideo } from '~/utils/ffmpeg-utils'
-import { convertSubtitleFiles } from '~/utils/subtitle-utils'
-import type { Route } from "./+types/home"
+import { Flashcard } from "./interfaces"
+import { setVideo } from "./utils/ffmpeg-utils"
+import { convertSubtitleFiles } from "./utils/subtitle-utils"
+import LanguageSelector from "./components/language-selector"
+import FocusedCard from "./components/focused-card"
+import { downloadFlashcards } from "./utils/download-utils"
+import Card from "./components/card"
+import "normalize.css"
 
-export function meta({ }: Route.MetaArgs) {
-	return [
-		{ title: "Video Flashcards Converter" },
-		{ name: "description", content: "Welcome to the Video Flashcards Converter!" },
-	]
-}
-
-export default function Home() {
+export default function App() {
 	const [sourceLanguage, setSourceLanguage] = useState<string>("ja")
 	const [targetLanguage, setTargetLanguage] = useState<string>("en")
 	const [deckName, setDeckName] = useState<string>("Flashcards")
@@ -26,6 +19,15 @@ export default function Home() {
 	const startOffset = useRef(0)
 	const endOffset = useRef(0)
 	const [focusedCard, setFocusedCard] = useState<number | null>(null)
+
+	//test api
+	const [message, setMessage] = useState<string>('')
+    useEffect(() => {
+        fetch('/api')
+            .then((response) => response.json())
+            .then((data) => setMessage(data.message))
+    }, []);
+	//
 
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (event.target.files && event.target.files.length > 0) {
@@ -90,6 +92,7 @@ export default function Home() {
 	return (
 		<div>
 			<h1>Video Flashcards Converter</h1>
+			<p>{message}</p>
 			<div>
 				<label htmlFor="deckName">Deck Name: </label>
 				<input
