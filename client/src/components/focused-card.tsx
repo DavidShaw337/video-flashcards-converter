@@ -1,9 +1,9 @@
 import type { FunctionComponent } from "react"
 import { useEffect, useRef, useState } from "react"
+import { Flashcard } from "../data/interfaces"
 import useFuriganaQuery from "../hooks/useFuriganaQuery"
 import useNotesQuery from "../hooks/useNotesQuery"
 import useTranslationQuery from "../hooks/useTranslationQuery"
-import { Flashcard } from "../data/interfaces"
 import AudioTrimmer from "./audio-trimmer"
 import ManualAIModal from "./manual-ai-modal"
 
@@ -91,7 +91,31 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                 />
             </div>
             <div style={{ flex: "1 1 33%", paddingLeft: "10px" }}>
-                <h3>Source</h3>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <h3>Source</h3>
+                    <button
+                        onClick={() => {
+                            furiganaQuery.query(flashcard.source).then(furigana => {
+                                if (furigana) setFlashcard({ ...flashcard, furigana })
+                            })
+                            translationQuery.query(flashcard.source).then(translation => {
+                                if (translation) setFlashcard({ ...flashcard, translation })
+                            })
+                            notesQuery.query(flashcard.source).then(notes => {
+                                if (notes) setFlashcard({ ...flashcard, notes })
+                            })
+                        }}
+                        style={{
+                            border: "1px solid black",
+                            padding: "5px 10px",
+                            borderRadius: "5px", // Rounded corners
+                            backgroundColor: "blue", // Blue background
+                            color: "white" // White text for contrast
+                        }}
+                    >
+                        Fill All
+                    </button>
+                </div>
                 <textarea
                     value={flashcard.source}
                     onChange={(event) => handleTextChange('source', event)}

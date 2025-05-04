@@ -5,7 +5,8 @@ export interface FuriganaRequest {
 }
 export interface FuriganaResponse {
     source: string
-    furigana: string
+    furigana?: string
+    error?: string
 }
 export const TRANSLATION_URL = '/api/translation'
 export interface TranslationRequest {
@@ -14,7 +15,8 @@ export interface TranslationRequest {
 }
 export interface TranslationResponse {
     source: string
-    translation: string
+    translation?: string
+    error?:string
 }
 export const NOTES_URL = '/api/notes'
 export interface NotesRequest {
@@ -23,7 +25,8 @@ export interface NotesRequest {
 }
 export interface NotesResponse {
     source: string
-    notes: string
+    notes?: string
+    error?:string
 }
 export enum LLM {
     ChatGPT = 'ChatGPT',
