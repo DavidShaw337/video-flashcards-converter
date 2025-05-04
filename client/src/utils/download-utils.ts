@@ -1,5 +1,5 @@
 import JSZip from "jszip"
-import { Flashcard } from "../interfaces"
+import { Flashcard } from "../data/interfaces"
 import { extractAudio, extractImage } from "./ffmpeg-utils"
 
 const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, videoName: string, sourceLanguage: string) => {

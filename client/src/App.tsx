@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Flashcard } from "./interfaces"
+import { Flashcard } from "./data/interfaces"
 import { setVideo } from "./utils/ffmpeg-utils"
 import { convertSubtitleFiles } from "./utils/subtitle-utils"
 import LanguageSelector from "./components/language-selector"
@@ -21,16 +21,7 @@ export default function App() {
 	const startOffset = useRef(0)
 	const endOffset = useRef(0)
 	const [focusedCard, setFocusedCard] = useState<number | null>(null)
-
-	//test api
-	const [message, setMessage] = useState<string>('')
-    useEffect(() => {
-        fetch('/api')
-            .then((response) => response.json())
-            .then((data) => setMessage(data.message))
-    }, []);
 	//
-
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (event.target.files && event.target.files.length > 0) {
 			const file = event.target.files[0]
@@ -94,7 +85,6 @@ export default function App() {
 	return (
 		<div>
 			<h1>Video Flashcards Converter</h1>
-			<p>{message}</p>
 			<div>
 				<label htmlFor="deckName">Deck Name: </label>
 				<input

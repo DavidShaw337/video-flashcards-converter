@@ -1,6 +1,9 @@
 import type { FunctionComponent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { Flashcard } from "../interfaces"
+import useFuriganaQuery from "../hooks/useFuriganaQuery"
+import useNotesQuery from "../hooks/useNotesQuery"
+import useTranslationQuery from "../hooks/useTranslationQuery"
+import { Flashcard } from "../data/interfaces"
 import AudioTrimmer from "./audio-trimmer"
 import ManualAIModal from "./manual-ai-modal"
 
@@ -19,6 +22,9 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
     const [cachedStartOffset] = useState(startOffset.current)
     const [cachedEndOffset] = useState(endOffset.current)
+    const furiganaQuery = useFuriganaQuery()
+    const translationQuery = useTranslationQuery()
+    const notesQuery = useNotesQuery()
     const [isModalOpen, setIsModalOpen] = useState(false)
 
     useEffect(() => {
@@ -92,21 +98,72 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                     placeholder="Enter source"
                     style={{ width: "100%", height: "60px", border: "1px solid black" }}
                 />
-                <h3>Furigana</h3>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <h3>Furigana</h3>
+                    <button
+                        onClick={async () => {
+                            const furigana = await furiganaQuery.query(flashcard.source)
+                            if (furigana) setFlashcard({ ...flashcard, furigana })
+                        }}
+                        style={{
+                            border: "1px solid black",
+                            padding: "5px 10px",
+                            borderRadius: "5px", // Rounded corners
+                            backgroundColor: "blue", // Blue background
+                            color: "white" // White text for contrast
+                        }}
+                    >
+                        Fill
+                    </button>
+                </div>
                 <textarea
                     value={flashcard.furigana}
                     onChange={(event) => handleTextChange('furigana', event)}
                     placeholder="Enter furigana"
                     style={{ width: "100%", height: "60px", border: "1px solid black" }}
                 />
-                <h3>Translation</h3>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <h3>Translation</h3>
+                    <button
+                        onClick={async () => {
+                            const translation = await translationQuery.query(flashcard.source)
+                            if (translation) setFlashcard({ ...flashcard, translation })
+                        }}
+                        style={{
+                            border: "1px solid black",
+                            padding: "5px 10px",
+                            borderRadius: "5px", // Rounded corners
+                            backgroundColor: "blue", // Blue background
+                            color: "white" // White text for contrast
+                        }}
+                    >
+                        Fill
+                    </button>
+                </div>
                 <textarea
                     value={flashcard.translation}
                     onChange={(event) => handleTextChange('translation', event)}
                     placeholder="Enter translation"
                     style={{ width: "100%", height: "60px", border: "1px solid black" }}
                 />
-                <h3>Notes</h3>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <h3>Notes</h3>
+                    <button
+                        onClick={async () => {
+                            const notes = await notesQuery.query(flashcard.source)
+                            if (notes) setFlashcard({ ...flashcard, notes })
+                        }}
+                        style={{
+                            border: "1px solid black",
+                            padding: "5px 10px",
+                            borderRadius: "5px", // Rounded corners
+                            backgroundColor: "blue", // Blue background
+                            color: "white" // White text for contrast
+                        }}
+                    >
+                        Fill
+                    </button>
+                </div>
                 <textarea
                     value={flashcard.notes}
                     onChange={(event) => handleTextChange('notes', event)}

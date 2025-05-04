@@ -1,4 +1,4 @@
-import { Flashcard } from "../interfaces"
+import { Flashcard } from "../data/interfaces"
 import { formatAnkiFurigana } from "./furigana-utils"
 
 const makeManualPrompt = (flashcards: Flashcard[], index: number) => {

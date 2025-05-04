@@ -2,7 +2,7 @@
   "name": "react-express-vite-ts",
   "version": "1.0.0",
   "scripts": {
-    "start": "concurrently \"npm run start:client\" \"npm run start:server\"",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
     "start:client" :"npm run start --prefix client",
     "start:server": "npm run start --prefix server",
     "build": "npm run build --prefix client"
