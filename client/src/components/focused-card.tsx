@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Button, Col, Form, Row } from "react-bootstrap"
 import { Flashcard } from "../data/interfaces"
 import useFuriganaQuery from "../hooks/useFuriganaQuery"
@@ -8,6 +8,7 @@ import useTranslationQuery from "../hooks/useTranslationQuery"
 import { getAverageOffsets } from "../utils/flashcard-utils"
 import AudioTrimmer from "./audio-trimmer"
 import ManualAIModal from "./manual-ai-modal"
+import ScreenshotSelector from "./screenshot-selector"
 
 interface CardProps {
     video: File
@@ -21,8 +22,6 @@ interface CardProps {
 
 const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcardIndex, setFlashcard }) => {
     const flashcard = flashcards[flashcardIndex]
-    const videoRef = useRef<HTMLVideoElement | null>(null)
-    const canvasRef = useRef<HTMLCanvasElement | null>(null)
     const [averageOffsets] = useState(() => getAverageOffsets(flashcards))
     const furiganaQuery = useFuriganaQuery()
     const translationQuery = useTranslationQuery()
@@ -40,71 +39,24 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
             //once the selected times are set, this hook will not run again for this card
         }
     }, [flashcards, flashcard, setFlashcard])
-    //show the image of the video at the selected time
-    useEffect(() => {
-        const videoElement = videoRef.current
-        const canvasElement = canvasRef.current
-        if (videoElement && canvasElement) {
-            const handleLoadedMetadata = async () => {
-                videoElement.currentTime = flashcard.selectedImageTime || flashcard.originalImageTime
-                videoElement.onseeked = async () => {
-                    const context = canvasElement.getContext("2d")
-                    if (context) {
-                        context.clearRect(0, 0, 0, 0)
-                        context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height)
-                        await new Promise(resolve => setTimeout(resolve, 1))
-                        context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height)
-                    }
-                }
-                // Trigger the onseeked event manually
-                videoElement.onseeked!(new Event('seeked'))
-            }
-            videoElement.addEventListener('loadedmetadata', handleLoadedMetadata)
-            return () => {
-                videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata)
-            }
-        }
-    }, [flashcard.selectedImageTime, flashcard.originalImageTime])
-    //handle the change for the image time slider
-    const handleImageTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const time = parseFloat(event.target.value)
-        setFlashcard({ ...flashcard, selectedImageTime: time, isImageTimeSetByUser: true })
-    }
     // Handle the change for source, furigana, and translation
     const handleTextChange = (field: 'source' | 'furigana' | 'translation' | 'notes', value: string) => {
         setFlashcard({ ...flashcard, [field]: value })
     }
     //these should get set almost immediately, so just don't render anything until they are set
-    if (flashcard.selectedStartTime === undefined || flashcard.selectedEndTime === undefined) {
+    if (flashcard.selectedStartTime === undefined || flashcard.selectedEndTime === undefined || flashcard.selectedImageTime === undefined) {
         return null
     }
     return (
         <Row>
             <Col xs={12} md={6}>
-                <canvas ref={canvasRef} width="320" height="180" style={{ width: "100%" }} />
-                <video ref={videoRef} src={URL.createObjectURL(video)} style={{ display: "none" }} />
-                <Row>
-                    <Col xs={10}>
-                        <input
-                            className="mt-8"
-                            type="range"
-                            min={flashcard.originalStartTime}
-                            max={flashcard.originalEndTime}
-                            step="0.1"
-                            value={flashcard.selectedImageTime}
-                            style={{ width: "100%" }}
-                            onChange={handleImageTimeChange}
-                        />
-                    </Col>
-                    <Col xs={2}>
-                        <Form.Control
-                            type="number"
-                            value={flashcard.selectedImageTime}
-                            onChange={handleImageTimeChange}
-                            step="0.1"
-                        />
-                    </Col>
-                </Row>
+                <ScreenshotSelector
+                    video={video}
+                    min={flashcard.originalStartTime}
+                    max={flashcard.originalEndTime}
+                    time={flashcard.selectedImageTime}
+                    setTime={time => setFlashcard({ ...flashcard, selectedImageTime: time, isImageTimeSetByUser: true })}
+                />
                 <AudioTrimmer
                     min={flashcard.originalStartTime + averageOffsets.startOffset - 2}
                     max={flashcard.originalEndTime + averageOffsets.endOffset + 2}
