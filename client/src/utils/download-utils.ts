@@ -19,6 +19,10 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
     for (let i = 0; i < flashcards.length; i++) {
         console.log(`[DEBUG] Processing flashcard ${i + 1} of ${flashcards.length}`)
         const flashcard = flashcards[i]
+        if(flashcard.isDeleted){
+            console.log(`[DEBUG] Skipping deleted flashcard ${i + 1}`)
+            continue
+        }
         const time = flashcard.originalStartTime.toFixed(2).padStart(8, '0')
         //
         const imageName = `${deckName}_${videoName}_${time.replace(".", "")}.png`

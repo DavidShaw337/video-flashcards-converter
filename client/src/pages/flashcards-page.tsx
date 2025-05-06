@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Button, Card, Container, ListGroup } from "react-bootstrap";
 import { AppContext } from "../components/app-context";
 import CollapsedCard from "../components/collapsed-card";
+import DeletedCard from "../components/deleted-card";
 import FocusedCard from "../components/focused-card";
 import { Flashcard } from "../data/interfaces";
 import { setVideo } from "../utils/ffmpeg-utils";
@@ -25,27 +26,40 @@ const FlashcardsPage = () => {
             return newFlashcards
         })
     }
+    console.log(focusedCard)
     return (
         <Container>
             <Card className="mt-5" style={{ minHeight: "50vh" }}>
                 <Card.Header>Flashcards</Card.Header>
                 <ListGroup>
                     {videoFile && flashcards.map((flashcard, index) => (
-                        <div key={index} onClick={() => setFocusedCard(index)}>
-                            {focusedCard === index ? (
+                        <div key={index} onClick={() => {
+                            if (focusedCard !== index) setFocusedCard(index)
+                        }}>
+                            {flashcard.isDeleted ?
                                 <ListGroup.Item>
-                                    <FocusedCard
-                                        video={videoFile}
-                                        flashcards={flashcards}
-                                        flashcardIndex={index}
-                                        startOffset={startOffset}
-                                        endOffset={endOffset}
-                                        imageOffset={imageOffset}
+                                    <DeletedCard
+                                        flashcard={flashcard}
                                         setFlashcard={(updatedFlashcard) => setFlashcard(index, updatedFlashcard)}
-                                    /></ListGroup.Item>
-                            ) : (
-                                <ListGroup.Item><CollapsedCard subtitle={flashcard} /></ListGroup.Item>
-                            )}
+                                    />
+                                </ListGroup.Item> :
+                                focusedCard === index ?
+                                    <ListGroup.Item>
+                                        <FocusedCard
+                                            video={videoFile}
+                                            flashcards={flashcards}
+                                            flashcardIndex={index}
+                                            startOffset={startOffset}
+                                            endOffset={endOffset}
+                                            imageOffset={imageOffset}
+                                            setFlashcard={(updatedFlashcard) => setFlashcard(index, updatedFlashcard)}
+                                        />
+                                    </ListGroup.Item>
+                                    :
+                                    <ListGroup.Item>
+                                        <CollapsedCard subtitle={flashcard} />
+                                    </ListGroup.Item>
+                            }
                         </div>
                     ))}
                 </ListGroup>

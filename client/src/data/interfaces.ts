@@ -15,4 +15,6 @@ export interface Flashcard {
     furigana?:string
     translation?:string
     notes?:string
+    //
+    isDeleted?:boolean
 }
