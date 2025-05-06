@@ -1,12 +1,18 @@
 export interface Flashcard {
     originalStartTime:number
-    selectedStartTime:number
+    selectedStartTime?:number
+    isStartTimeSetByUser?:boolean
+    //
     originalEndTime:number
-    selectedEndTime:number
+    selectedEndTime?:number
+    isEndTimeSetByUser?:boolean
+    //
     originalImageTime:number
-    selectedImageTime:number
+    selectedImageTime?:number
+    isImageTimeSetByUser?:boolean
+    //
     source:string
-    furigana:string
-    translation:string
-    notes:string
+    furigana?:string
+    translation?:string
+    notes?:string
 }

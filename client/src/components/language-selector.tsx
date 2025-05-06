@@ -1,4 +1,5 @@
 import React from 'react'
+import { Form } from 'react-bootstrap'
 
 // Define the type for the language options
 interface LanguageOption {
@@ -14,7 +15,7 @@ interface LanguageSelectorProps {
     id?: string
 }
 
-const LanguageSelector: React.FC<LanguageSelectorProps> = ({ value, onChange, label = "Select Language", id = "language-select" }) => {
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ value, onChange, label = "Select Language" }) => {
     // List of languages (You can add more languages or pull from an API)
     const options: LanguageOption[] = [
         { value: 'en', label: 'English' },
@@ -32,16 +33,16 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ value, onChange, la
     ]
 
     return (
-        <div>
-            <label htmlFor={id}>{label}</label>
-            <select id={id} value={value} onChange={event => onChange(event.target.value)}>
+        <Form.Group className="mb-3">
+            <Form.Label>{label}</Form.Label>
+            <Form.Select value={value} onChange={event => onChange(event.target.value)}>
                 {options.map((language) => (
                     <option key={language.value} value={language.value}>
                         {language.label}
                     </option>
                 ))}
-            </select>
-        </div>
+            </Form.Select>
+        </Form.Group>
     )
 }
 

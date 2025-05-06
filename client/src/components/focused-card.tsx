@@ -1,9 +1,11 @@
 import type { FunctionComponent } from "react"
 import { useEffect, useRef, useState } from "react"
+import { Button, Col, Form, Row } from "react-bootstrap"
 import { Flashcard } from "../data/interfaces"
 import useFuriganaQuery from "../hooks/useFuriganaQuery"
 import useNotesQuery from "../hooks/useNotesQuery"
 import useTranslationQuery from "../hooks/useTranslationQuery"
+import { getAverageOffsets } from "../utils/flashcard-utils"
 import AudioTrimmer from "./audio-trimmer"
 import ManualAIModal from "./manual-ai-modal"
 
@@ -13,20 +15,32 @@ interface CardProps {
     flashcardIndex: number
     startOffset: React.RefObject<number>
     endOffset: React.RefObject<number>
+    imageOffset: React.RefObject<number>
     setFlashcard: (flashcard: Flashcard) => void
 }
 
-const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcardIndex, startOffset, endOffset, setFlashcard }) => {
+const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcardIndex, setFlashcard }) => {
     const flashcard = flashcards[flashcardIndex]
     const videoRef = useRef<HTMLVideoElement | null>(null)
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
-    const [cachedStartOffset] = useState(startOffset.current)
-    const [cachedEndOffset] = useState(endOffset.current)
+    const [averageOffsets] = useState(() => getAverageOffsets(flashcards))
     const furiganaQuery = useFuriganaQuery()
     const translationQuery = useTranslationQuery()
     const notesQuery = useNotesQuery()
     const [isModalOpen, setIsModalOpen] = useState(false)
-
+    //when first seeing a card, adjust the times based on the average offsets the user has set for the other cards
+    useEffect(() => {
+        if (!flashcard.selectedStartTime || !flashcard.selectedEndTime || !flashcard.selectedImageTime) {
+            setFlashcard({
+                ...flashcard,
+                selectedStartTime: flashcard.selectedStartTime || flashcard.originalStartTime + averageOffsets.startOffset,
+                selectedEndTime: flashcard.selectedEndTime || flashcard.originalEndTime + averageOffsets.endOffset,
+                selectedImageTime: flashcard.selectedImageTime || flashcard.originalImageTime + averageOffsets.imageOffset,
+            })
+            //once the selected times are set, this hook will not run again for this card
+        }
+    }, [flashcards, flashcard, setFlashcard])
+    //show the image of the video at the selected time
     useEffect(() => {
         const videoElement = videoRef.current
         const canvasElement = canvasRef.current
@@ -51,49 +65,59 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
             }
         }
     }, [flashcard.selectedImageTime, flashcard.originalImageTime])
-
+    //handle the change for the image time slider
     const handleImageTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const time = parseFloat(event.target.value)
-        setFlashcard({ ...flashcard, selectedImageTime: time })
+        setFlashcard({ ...flashcard, selectedImageTime: time, isImageTimeSetByUser: true })
     }
-
     // Handle the change for source, furigana, and translation
-    const handleTextChange = (field: 'source' | 'furigana' | 'translation' | 'notes', event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setFlashcard({ ...flashcard, [field]: event.target.value })
+    const handleTextChange = (field: 'source' | 'furigana' | 'translation' | 'notes', value: string) => {
+        setFlashcard({ ...flashcard, [field]: value })
     }
-
+    //these should get set almost immediately, so just don't render anything until they are set
+    if (flashcard.selectedStartTime === undefined || flashcard.selectedEndTime === undefined) {
+        return null
+    }
     return (
-        <div style={{ display: "flex", border: "1px solid black", padding: "10px", margin: "10px" }}>
-            <div style={{ flex: "1 1 33%" }}>
+        <Row>
+            <Col xs={12} md={6}>
                 <canvas ref={canvasRef} width="320" height="180" style={{ width: "100%" }} />
                 <video ref={videoRef} src={URL.createObjectURL(video)} style={{ display: "none" }} />
-            </div>
-            <div style={{ flex: "2 1 33%", paddingLeft: "10px" }}>
-                <h3>Image</h3>
-                <input
-                    type="range"
-                    min={flashcard.originalStartTime}
-                    max={flashcard.originalEndTime}
-                    step="0.1"
-                    value={flashcard.selectedImageTime || flashcard.originalImageTime}
-                    onChange={handleImageTimeChange}
-                />
-                <span>{(flashcard.selectedImageTime || flashcard.originalImageTime).toFixed(1)}s</span>
-                <br />
-                <h3>Audio</h3>
+                <Row>
+                    <Col xs={10}>
+                        <input
+                            className="mt-8"
+                            type="range"
+                            min={flashcard.originalStartTime}
+                            max={flashcard.originalEndTime}
+                            step="0.1"
+                            value={flashcard.selectedImageTime}
+                            style={{ width: "100%" }}
+                            onChange={handleImageTimeChange}
+                        />
+                    </Col>
+                    <Col xs={2}>
+                        <Form.Control
+                            type="number"
+                            value={flashcard.selectedImageTime}
+                            onChange={handleImageTimeChange}
+                            step="0.1"
+                        />
+                    </Col>
+                </Row>
                 <AudioTrimmer
-                    min={flashcard.originalStartTime + cachedStartOffset - 2}
-                    max={flashcard.originalEndTime + cachedEndOffset + 2}
-                    start={flashcard.selectedStartTime || (flashcard.originalStartTime + cachedStartOffset)}
-                    end={flashcard.selectedEndTime || (flashcard.originalEndTime + cachedEndOffset)}
-                    setStart={(start) => setFlashcard({ ...flashcard, selectedStartTime: start })}
-                    setEnd={(end) => setFlashcard({ ...flashcard, selectedEndTime: end })}
+                    min={flashcard.originalStartTime + averageOffsets.startOffset - 2}
+                    max={flashcard.originalEndTime + averageOffsets.endOffset + 2}
+                    start={flashcard.selectedStartTime}
+                    end={flashcard.selectedEndTime}
+                    setStart={(start) => setFlashcard({ ...flashcard, selectedStartTime: start, isStartTimeSetByUser: true })}
+                    setEnd={(end) => setFlashcard({ ...flashcard, selectedEndTime: end, isEndTimeSetByUser: true })}
                 />
-            </div>
-            <div style={{ flex: "1 1 33%", paddingLeft: "10px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            </Col>
+            <Col xs={12} md={6}>
+                <div className="mt-2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <h3>Source</h3>
-                    <button
+                    <Button variant="primary"
                         onClick={() => {
                             furiganaQuery.query(flashcard.source).then(furigana => {
                                 if (furigana) setFlashcard({ ...flashcard, furigana })
@@ -105,103 +129,81 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                                 if (notes) setFlashcard({ ...flashcard, notes })
                             })
                         }}
-                        style={{
-                            border: "1px solid black",
-                            padding: "5px 10px",
-                            borderRadius: "5px", // Rounded corners
-                            backgroundColor: "blue", // Blue background
-                            color: "white" // White text for contrast
-                        }}
                     >
                         Fill All
-                    </button>
+                    </Button>
                 </div>
-                <textarea
-                    value={flashcard.source}
-                    onChange={(event) => handleTextChange('source', event)}
-                    placeholder="Enter source"
-                    style={{ width: "100%", height: "60px", border: "1px solid black" }}
-                />
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Form.Group>
+                    <Form.Control
+                        type="text"
+                        as="textarea"
+                        value={flashcard.source}
+                        onChange={(event) => handleTextChange('source', event.target.value)}
+                        placeholder="Enter source"
+                        style={{ height: "65px" }}
+                    />
+                </Form.Group>
+                <div className="mt-2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <h3>Furigana</h3>
-                    <button
+                    <Button variant="primary"
                         onClick={async () => {
                             const furigana = await furiganaQuery.query(flashcard.source)
                             if (furigana) setFlashcard({ ...flashcard, furigana })
                         }}
-                        style={{
-                            border: "1px solid black",
-                            padding: "5px 10px",
-                            borderRadius: "5px", // Rounded corners
-                            backgroundColor: "blue", // Blue background
-                            color: "white" // White text for contrast
-                        }}
                     >
                         Fill
-                    </button>
+                    </Button>
                 </div>
-                <textarea
+                <Form.Control
+                    type="text"
+                    as="textarea"
                     value={flashcard.furigana}
-                    onChange={(event) => handleTextChange('furigana', event)}
+                    onChange={(event) => handleTextChange('furigana', event.target.value)}
                     placeholder="Enter furigana"
-                    style={{ width: "100%", height: "60px", border: "1px solid black" }}
+                    style={{ height: "65px" }}
                 />
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div className="mt-2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <h3>Translation</h3>
-                    <button
+                    <Button variant="primary"
                         onClick={async () => {
                             const translation = await translationQuery.query(flashcard.source)
                             if (translation) setFlashcard({ ...flashcard, translation })
                         }}
-                        style={{
-                            border: "1px solid black",
-                            padding: "5px 10px",
-                            borderRadius: "5px", // Rounded corners
-                            backgroundColor: "blue", // Blue background
-                            color: "white" // White text for contrast
-                        }}
                     >
                         Fill
-                    </button>
+                    </Button>
                 </div>
-                <textarea
+                <Form.Control
+                    type="text"
+                    as="textarea"
                     value={flashcard.translation}
-                    onChange={(event) => handleTextChange('translation', event)}
+                    onChange={(event) => handleTextChange('translation', event.target.value)}
                     placeholder="Enter translation"
-                    style={{ width: "100%", height: "60px", border: "1px solid black" }}
+                    style={{ height: "65px" }}
                 />
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div className="mt-2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <h3>Notes</h3>
-                    <button
+                    <Button variant="primary"
                         onClick={async () => {
                             const notes = await notesQuery.query(flashcard.source)
                             if (notes) setFlashcard({ ...flashcard, notes })
                         }}
-                        style={{
-                            border: "1px solid black",
-                            padding: "5px 10px",
-                            borderRadius: "5px", // Rounded corners
-                            backgroundColor: "blue", // Blue background
-                            color: "white" // White text for contrast
-                        }}
                     >
                         Fill
-                    </button>
+                    </Button>
                 </div>
-                <textarea
+                <Form.Control
+                    type="text"
+                    as="textarea"
                     value={flashcard.notes}
-                    onChange={(event) => handleTextChange('notes', event)}
+                    onChange={(event) => handleTextChange('notes', event.target.value)}
                     placeholder="Enter notes"
-                    style={{ width: "100%", height: "120px", border: "1px solid black" }}
+                    style={{ height: "130px" }}
                 />
-                <button onClick={() => setIsModalOpen(!isModalOpen)} style={{
-                    marginTop: "10px",
-                    border: "1px solid black",  // Add a black border
-                    padding: "5px 10px"          // Optionally, you can adjust the padding for a better look
-                }}>Ask AI Manually</button>
-            </div>
+                <Button variant="primary" className="mt-2" onClick={() => setIsModalOpen(!isModalOpen)} >Ask AI Manually</Button>
+            </Col>
             <ManualAIModal open={isModalOpen} setOpen={setIsModalOpen} flashcards={flashcards} flashcardIndex={flashcardIndex} setFlashcard={setFlashcard} />
-        </div>
+        </Row>
     )
 }
 

@@ -1,44 +1,30 @@
 import { Flashcard } from "../data/interfaces"
 import { roundToFixed } from "./math-utils"
 
-const convertSubtitleFiles = async (sourceFile: File): Promise<Flashcard[]> => {
-    const sourceSubtitles = await convertSubtitleFile(sourceFile)
+const convertSRTFileToFlashcards = async (srtFile: File): Promise<Flashcard[]> => {
     const flashcards: Flashcard[] = []
-    for (const sourceSubtitle of sourceSubtitles) {
-        const midpoint = roundToFixed((sourceSubtitle.startTime + sourceSubtitle.endTime) / 2, 1)
-        flashcards.push({
-            originalStartTime: sourceSubtitle.startTime,
-            originalEndTime: sourceSubtitle.endTime,
-            originalImageTime: midpoint,
-            source: sourceSubtitle.text,
-        } as Flashcard)
-    }
-    return flashcards
-}
-const convertSubtitleFile = async (file: File): Promise<Subtitle[]> => {
+
     const reader = new FileReader()
-
     const content = await new Promise<string>((resolve, reject) => {
-        reader.onload = (event) => {
-            resolve(event.target?.result as string)
-        }
+        reader.onload = (event) => resolve(event.target?.result as string)
         reader.onerror = (error) => reject(error)
-        reader.readAsText(file)
+        reader.readAsText(srtFile)
     })
-
-    const subtitles: Subtitle[] = []
     const srtRegex = /(\d+)\s+(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\s+([\s\S]*?)(?=\r?\n\r?\n|\r?\n*$)/g
     let match
-
     while ((match = srtRegex.exec(content)) !== null) {
         const startTime = convertTimeToSeconds(match[2])
         const endTime = convertTimeToSeconds(match[3])
-        const duration = endTime - startTime
+        const midpoint = roundToFixed((startTime + endTime) / 2, 1)
         const text = match[4].replace(/\r\n/g, '\n').trim()
-        subtitles.push({ startTime, endTime, duration, text })
+        flashcards.push({
+            originalStartTime: startTime,
+            originalEndTime: endTime,
+            originalImageTime: midpoint,
+            source: text,
+        } as Flashcard)
     }
-
-    return subtitles
+    return flashcards
 }
 
 const convertTimeToSeconds = (time: string): number => {
@@ -52,12 +38,5 @@ const convertTimeToSeconds = (time: string): number => {
     )
 }
 
-interface Subtitle {
-    startTime: number // in seconds
-    endTime: number // in seconds
-    duration: number
-    text: string
-}
-
-export { convertSubtitleFiles }
+export { convertSRTFileToFlashcards }
 

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Col, Form, Row } from 'react-bootstrap'
 import { extractAudio } from '../utils/ffmpeg-utils'
 import { drawOverlay, drawWaveform } from '../utils/waveform-utils'
 
@@ -136,23 +137,42 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
     }
 
     return (
-        <div>
+        <div className="mt-2">
             {audioUrl && <audio ref={audioRef} src={audioUrl} />}
-            <div style={{ position: 'relative', width: '600px', height: '100px' }}>
+            {/* <div style={{ position: 'relative', width: '600px', height: '100px' }}>
                 <canvas ref={waveformCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
                 <canvas ref={overlayCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
                 <canvas ref={markerCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} onClick={handleOverlayCanvasClick} />
+            </div> */}
+            <div style={{ position: 'relative', width: '100%', height: '100px' }}>
+                <canvas ref={waveformCanvasRef} style={{ position: 'absolute', width: "100%", height: "100%" }} />
+                <canvas ref={overlayCanvasRef} style={{ position: 'absolute', width: "100%", height: "100%" }} />
+                <canvas ref={markerCanvasRef} style={{ position: 'absolute', width: "100%", height: "100%" }} onClick={handleOverlayCanvasClick} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ flex: 1, marginRight: '20px' }}>
-                    <label>Start: </label>
-                    <input type="number" style={{ maxWidth: '5em' }} step="0.1" value={start} onChange={handleStartChange} />
-                </div>
-                <div style={{ flex: 1 }}>
-                    <label>End: </label>
-                    <input type="number" style={{ maxWidth: '5em' }} step="0.1" value={end} onChange={handleEndChange} />
-                </div>
-            </div>
+            <Row>
+                <Col xs={6}>
+                    <Form.Group>
+                        <Form.Label>Start</Form.Label>
+                        <Form.Control
+                            type="number"
+                            value={start}
+                            onChange={handleStartChange}
+                            step="0.1"
+                        />
+                    </Form.Group>
+                </Col>
+                <Col xs={6}>
+                    <Form.Group>
+                        <Form.Label>End</Form.Label>
+                        <Form.Control
+                            type="number"
+                            value={end}
+                            onChange={handleEndChange}
+                            step="0.1"
+                        />
+                    </Form.Group>
+                </Col>
+            </Row>
         </div>
     )
 }
