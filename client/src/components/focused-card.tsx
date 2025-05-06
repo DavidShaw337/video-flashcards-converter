@@ -32,9 +32,9 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
         if (!flashcard.selectedStartTime || !flashcard.selectedEndTime || !flashcard.selectedImageTime) {
             setFlashcard({
                 ...flashcard,
-                selectedStartTime: flashcard.selectedStartTime || flashcard.originalStartTime + averageOffsets.startOffset,
-                selectedEndTime: flashcard.selectedEndTime || flashcard.originalEndTime + averageOffsets.endOffset,
-                selectedImageTime: flashcard.selectedImageTime || flashcard.originalImageTime + averageOffsets.imageOffset,
+                selectedStartTime: flashcard.selectedStartTime || Math.round((flashcard.originalStartTime + averageOffsets.startOffset) * 10) / 10,
+                selectedEndTime: flashcard.selectedEndTime || Math.round((flashcard.originalEndTime + averageOffsets.endOffset) * 10) / 10,
+                selectedImageTime: flashcard.selectedImageTime || Math.round((flashcard.originalImageTime + averageOffsets.imageOffset) * 10) / 10,
             })
             //once the selected times are set, this hook will not run again for this card
         }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { ReactEventHandler, useEffect, useRef, useState } from 'react'
 import { Col, Form, Row } from 'react-bootstrap'
 import { extractAudio } from '../utils/ffmpeg-utils'
 import { drawOverlay, drawWaveform } from '../utils/waveform-utils'
@@ -14,77 +14,31 @@ interface AudioTrimmerProps {
 
 const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, end, setEnd }) => {
     const [audioUrl, setAudio] = useState<string | undefined>()
-    const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | undefined>()
     const audioRef = useRef<HTMLAudioElement>(null)
     const waveformCanvasRef = useRef<HTMLCanvasElement>(null)
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null)
     const markerCanvasRef = useRef<HTMLCanvasElement>(null)
-
+    //extract a small audio clip so we don't have to use the whole audio file
     useEffect(() => {
+        //loading the audio takes a noticeable amount of time, so only do it when the min and max change
         const extractAndSetAudio = async () => {
+            if (!waveformCanvasRef.current) throw Error('No waveform canvas')
             const { audioUrl, audioBuffer } = await extractAudio(min, max)
+            if (!audioUrl || !audioBuffer) throw Error('No audio data')
+            //set the audio url that actually plays the audio
             setAudio(audioUrl)
-            setAudioBuffer(audioBuffer)
+            //draw the waveform
+            const channelData = audioBuffer.getChannelData(0) //only gets one channel
+            drawWaveform(channelData, waveformCanvasRef.current)
         }
         extractAndSetAudio()
     }, [min, max])
-
+    //draw the overlay when start or end changes; this is the blue bar that shows the selected range
     useEffect(() => {
-        if (!waveformCanvasRef.current || !audioBuffer) return
-        const channelData = audioBuffer.getChannelData(0)
-        drawWaveform(channelData, waveformCanvasRef.current)
-    }, [audioBuffer])
-
-    useEffect(() => {
-        if (!audioBuffer) return
         if (!overlayCanvasRef.current) return
         drawOverlay(min, max, start, end, overlayCanvasRef.current)
-    }, [audioBuffer, min, max, start, end])
-
-    const handleOverlayCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-        if (!overlayCanvasRef.current || !audioRef.current) return
-        //get click position as a percentage of the canvas width
-        const rect = overlayCanvasRef.current.getBoundingClientRect()
-        const clickPercent = (event.clientX - rect.left) / rect.width
-        //convert the click percentage to a point in time between min and max
-        const timeWidth = max - min
-        const time = min + clickPercent * timeWidth
-        const roundedTime = Math.round(time * 10) / 10
-        //assume the click is meant to change the side that is closer to the click
-        const midPoint = (start + end) / 2
-        if (roundedTime < midPoint) {
-            setStart(roundedTime)
-            //play audio
-            audioRef.current.currentTime = roundedTime - min
-            audioRef.current.play()
-            animateMarker(roundedTime, end)
-        } else {
-            setEnd(roundedTime)
-            //play audio
-            audioRef.current.currentTime = start - min
-            audioRef.current.play()
-            animateMarker(start, roundedTime)
-        }
-    }
-
-    const pauseAudioAtEnd = useCallback(() => {
-        if (audioRef.current && audioRef.current.currentTime >= end - min) {
-            audioRef.current.pause()
-        }
-    }, [min, end])
-
-    useEffect(() => {
-        if (!audioRef.current) return
-
-        //pause audio at end
-        audioRef.current.addEventListener('timeupdate', pauseAudioAtEnd)
-        return () => {
-            if (audioRef.current) {
-                audioRef.current.removeEventListener('timeupdate', pauseAudioAtEnd)
-            }
-        }
-    }, [pauseAudioAtEnd])
-
+    }, [min, max, start, end])
+    //draw the red line that shows the current time and animate it to the right
     const animationFrameRef = useRef<number>(null) // Store reference to the animation frame
     const animateMarker = (start: number, end: number) => {
         if (!markerCanvasRef.current) return
@@ -115,7 +69,33 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
         }
         animate() // Start the animation
     }
-
+    //when the user clicks on the overlay, update the start or end time, play the audio, and animate the marker
+    const handleOverlayCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+        if (!overlayCanvasRef.current || !audioRef.current) return
+        //get click position as a percentage of the canvas width
+        const rect = overlayCanvasRef.current.getBoundingClientRect()
+        const clickPercent = (event.clientX - rect.left) / rect.width
+        //convert the click percentage to a point in time between min and max
+        const timeWidth = max - min
+        const time = min + clickPercent * timeWidth
+        const roundedTime = Math.round(time * 10) / 10
+        //assume the click is meant to change the side that is closer to the click
+        const midPoint = (start + end) / 2
+        if (roundedTime < midPoint) {
+            setStart(roundedTime)
+            //play audio
+            audioRef.current.currentTime = roundedTime - min
+            audioRef.current.play()
+            animateMarker(roundedTime, end)
+        } else {
+            setEnd(roundedTime)
+            //play audio
+            audioRef.current.currentTime = start - min
+            audioRef.current.play()
+            animateMarker(start, roundedTime)
+        }
+    }
+    //when the user changes the start time, play the audio and animate the marker
     const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const time = Number(e.target.value)
         setStart(time)
@@ -125,7 +105,7 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
             animateMarker(time, end)
         }
     }
-
+    //when the user changes the end time, play the audio and animate the marker
     const handleEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const time = Number(e.target.value)
         setEnd(time)
@@ -135,10 +115,22 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
             animateMarker(start, time)
         }
     }
-
+    //pause the audio when it reaches the end time
+    const pauseAudioAtEnd: ReactEventHandler<HTMLAudioElement> = (event) => {
+        if (event.currentTarget.currentTime >= end - min) event.currentTarget.pause()
+    }
+    //play the audio when the component is first rendered
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = start - min
+            audioRef.current.play()
+            animateMarker(start, end)
+        }
+    }, [audioUrl])
+    //
     return (
         <div className="mt-2">
-            {audioUrl && <audio ref={audioRef} src={audioUrl} />}
+            {audioUrl && <audio ref={audioRef} src={audioUrl} onTimeUpdate={pauseAudioAtEnd} />}
             {/* <div style={{ position: 'relative', width: '600px', height: '100px' }}>
                 <canvas ref={waveformCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
                 <canvas ref={overlayCanvasRef} width="600" height="100" style={{ position: 'absolute', top: 0, left: 0 }} />
