@@ -3,7 +3,7 @@ import { Flashcard } from "../data/interfaces"
 import { extractAudio, extractImage } from "./ffmpeg-utils"
 
 const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, videoName: string, sourceLanguage: string) => {
-    flashcards = flashcards.slice(0, 10)
+    flashcards = flashcards.slice(0, 100)
     //
     const zip = new JSZip()
     //
@@ -19,7 +19,7 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
     for (let i = 0; i < flashcards.length; i++) {
         console.log(`[DEBUG] Processing flashcard ${i + 1} of ${flashcards.length}`)
         const flashcard = flashcards[i]
-        if(flashcard.isDeleted){
+        if (flashcard.isDeleted) {
             console.log(`[DEBUG] Skipping deleted flashcard ${i + 1}`)
             continue
         }

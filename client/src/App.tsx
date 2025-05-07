@@ -6,6 +6,7 @@ import FlashcardsPage from "./pages/flashcards-page"
 import StartPage from "./pages/start-page"
 import SubtitlesPage from "./pages/subtitles-page"
 import VideoPage from "./pages/video-page"
+import TestPage from "./pages/test-page"
 
 const App: React.FC = () => {
     return <AppProvider><Router /></AppProvider>
@@ -14,6 +15,7 @@ export default App
 
 const Router: React.FC = () => {
     const { page } = useContext(AppContext)
+    // return <TestPage/>
     if (page === "start") return <StartPage />
     if (page === "video") return <VideoPage />
     if (page === "subtitles") return <SubtitlesPage />

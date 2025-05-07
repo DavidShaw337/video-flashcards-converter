@@ -41,7 +41,6 @@ const SubtitlesPage: React.FC = () => {
 					<Button variant="outline-primary" disabled={!subtitleFile} onClick={async () => {
 						const flashcards = await convertSRTFileToFlashcards(subtitleFile!)
 						setFlashcards(flashcards)
-						console.log(flashcards)
 						setPage("config")
 					}}>Process Subtitles</Button>
 					<Button variant="primary" disabled={continueDisabled} onClick={() => setPage("config")}>Continue</Button>

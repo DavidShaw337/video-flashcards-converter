@@ -26,7 +26,6 @@ const FlashcardsPage = () => {
             return newFlashcards
         })
     }
-    console.log(focusedCard)
     return (
         <Container>
             <Card className="mt-5" style={{ minHeight: "50vh" }}>

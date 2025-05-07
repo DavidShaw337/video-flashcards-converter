@@ -22,7 +22,7 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
     useEffect(() => {
         //loading the audio takes a noticeable amount of time, so only do it when the min and max change
         const extractAndSetAudio = async () => {
-            if (!waveformCanvasRef.current) throw Error('No waveform canvas')
+            if (!waveformCanvasRef.current ) return
             const { audioUrl, audioBuffer } = await extractAudio(min, max)
             if (!audioUrl || !audioBuffer) throw Error('No audio data')
             //set the audio url that actually plays the audio
