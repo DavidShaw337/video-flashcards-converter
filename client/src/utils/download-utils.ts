@@ -2,9 +2,7 @@ import JSZip from "jszip"
 import { Flashcard } from "../data/interfaces"
 import { ffmpegService } from "../services/ffmpeg-service"
 
-const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, videoName: string, sourceLanguage: string) => {
-    // flashcards = flashcards.slice(0, 100)
-    //
+const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, videoName: string, sourceLanguage: string, setProgress: (p: number) => void) => {
     const zip = new JSZip()
     //
     let csvContent = "#separator:Semicolon\n"
@@ -16,6 +14,7 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
         csvContent += "#columns:Id;Image;Audio;Source;Translation;Notes\n"
     }
     //
+    const usedTimes: number[] = []
     for (let i = 0; i < flashcards.length; i++) {
         console.log(`[DEBUG] Processing flashcard ${i + 1} of ${flashcards.length}`)
         const flashcard = flashcards[i]
@@ -23,17 +22,21 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
             console.log(`[DEBUG] Skipping deleted flashcard ${i + 1}`)
             continue
         }
-        const time = flashcard.originalStartTime.toFixed(2).padStart(8, '0')
+        //time in ms
+        let time = Math.round(flashcard.originalStartTime * 1000)
+        //make sure every card has a unique time, probably not going to be an issue
+        while (usedTimes.includes(time)) time++
+        usedTimes.push(time)
         //
-        const imageName = `${deckName}_${videoName}_${time.replace(".", "")}.png`
+        const imageName = `${deckName}_${videoName}_${time.toFixed(0).padStart(8, '0')}.png`
         const imageBlob = await ffmpegService.extractImage(flashcard.selectedImageTime || flashcard.originalImageTime)
         zip.file(imageName, imageBlob)
         //
-        const audioName = `${deckName}_${videoName}_${time.replace(".", "")}.mp3`
+        const audioName = `${deckName}_${videoName}_${time.toFixed(0).padStart(8, '0')}.mp3`
         const { audioBlob } = await ffmpegService.extractAudio(flashcard.selectedStartTime || flashcard.originalStartTime, flashcard.selectedEndTime || flashcard.originalEndTime)
         zip.file(audioName, audioBlob)
         //
-        csvContent += `${videoName}_${time};`
+        csvContent += `${videoName}_${time.toFixed(0).padStart(8, '0')};`
         csvContent += `<img src="${imageName}">;`
         csvContent += `[sound:${audioName}];`
         csvContent += `"${flashcard.source.replace(/"/g, '""')}";`
@@ -42,6 +45,7 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
         }
         csvContent += `"${(flashcard.translation || "").replace(/"/g, '""')}";`
         csvContent += `"${(flashcard.notes || "").replace(/"/g, '""')}"\n`
+        setProgress((i + 1) / flashcards.length)
     }
     //
     const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
