@@ -1,11 +1,10 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { Button, Card, Container, ListGroup } from "react-bootstrap";
-import { AppContext } from "../components/app-context";
-import CollapsedCard from "../components/collapsed-card";
-import DeletedCard from "../components/deleted-card";
-import FocusedCard from "../components/focused-card";
-import { Flashcard } from "../data/interfaces";
-import { setVideo } from "../utils/ffmpeg-utils";
+import { useContext, useRef, useState } from "react"
+import { Button, Card, Container, ListGroup } from "react-bootstrap"
+import { AppContext } from "../components/app-context"
+import CollapsedCard from "../components/collapsed-card"
+import DeletedCard from "../components/deleted-card"
+import FocusedCard from "../components/focused-card"
+import { Flashcard } from "../data/interfaces"
 
 const FlashcardsPage = () => {
     const { setPage, videoFile, flashcards, setFlashcards } = useContext(AppContext)
@@ -13,11 +12,6 @@ const FlashcardsPage = () => {
     const endOffset = useRef(0)
     const imageOffset = useRef(0)
     const [focusedCard, setFocusedCard] = useState<number | null>(null)
-    useEffect(() => {
-        if (videoFile) {
-            setVideo(videoFile)
-        }
-    }, [videoFile])
 
     const setFlashcard = (index: number, updatedFlashcard: Flashcard) => {
         setFlashcards((prevFlashcards) => {

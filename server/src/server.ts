@@ -12,6 +12,12 @@ export default class Server {
         const app = express()
         const port = process.env.PORT || 5000
 
+        // Set security-related HTTP headers
+        app.use((req, res, next) => {
+            res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+            res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+            next();
+        });
         // Serve static files from Vite build output
         app.use(express.static(path.join(__dirname, '../../client/dist')))
         // Middleware to parse JSON request bodies

@@ -1,6 +1,6 @@
 import React, { ReactEventHandler, useEffect, useRef, useState } from 'react'
 import { Col, Form, Row } from 'react-bootstrap'
-import { extractAudio } from '../utils/ffmpeg-utils'
+import { ffmpegService } from '../services/ffmpeg-service'
 import { drawOverlay, drawWaveform } from '../utils/waveform-utils'
 
 interface AudioTrimmerProps {
@@ -22,8 +22,8 @@ const AudioTrimmer: React.FC<AudioTrimmerProps> = ({ min, max, start, setStart, 
     useEffect(() => {
         //loading the audio takes a noticeable amount of time, so only do it when the min and max change
         const extractAndSetAudio = async () => {
-            if (!waveformCanvasRef.current ) return
-            const { audioUrl, audioBuffer } = await extractAudio(min, max)
+            if (!waveformCanvasRef.current) return
+            const { audioUrl, audioBuffer } = await ffmpegService.extractAudio(min, max)
             if (!audioUrl || !audioBuffer) throw Error('No audio data')
             //set the audio url that actually plays the audio
             setAudio(audioUrl)

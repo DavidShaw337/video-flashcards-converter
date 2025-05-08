@@ -1,9 +1,7 @@
 import { useContext } from "react"
 import { Button, Card, Container, Form } from "react-bootstrap"
 import { AppContext } from "../components/app-context"
-import { setVideo } from "../utils/ffmpeg-utils"
-
-
+import { ffmpegService } from "../services/ffmpeg-service"
 
 const VideoPage: React.FC = () => {
 	const { setPage, videoFile, setVideoFile, flashcards } = useContext(AppContext)
@@ -28,7 +26,7 @@ const VideoPage: React.FC = () => {
 							onChange={event => {
 								const target = event.target as HTMLInputElement
 								if (target.files && target.files.length > 0) {
-									setVideo(target.files[0])
+									ffmpegService.setVideo(target.files[0])
 									setVideoFile(target.files[0])
 								}
 							}}

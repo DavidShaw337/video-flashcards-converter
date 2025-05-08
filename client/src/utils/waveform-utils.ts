@@ -1,5 +1,6 @@
 
 const drawWaveform = async (channelData: Float32Array, canvas: HTMLCanvasElement) => {
+    if(!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 

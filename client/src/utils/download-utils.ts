@@ -1,9 +1,9 @@
 import JSZip from "jszip"
 import { Flashcard } from "../data/interfaces"
-import { extractAudio, extractImage } from "./ffmpeg-utils"
+import { ffmpegService } from "../services/ffmpeg-service"
 
 const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, videoName: string, sourceLanguage: string) => {
-    flashcards = flashcards.slice(0, 100)
+    // flashcards = flashcards.slice(0, 100)
     //
     const zip = new JSZip()
     //
@@ -26,12 +26,12 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
         const time = flashcard.originalStartTime.toFixed(2).padStart(8, '0')
         //
         const imageName = `${deckName}_${videoName}_${time.replace(".", "")}.png`
-        const imageBlob = await extractImage(flashcard.selectedImageTime || flashcard.originalImageTime)
+        const imageBlob = await ffmpegService.extractImage(flashcard.selectedImageTime || flashcard.originalImageTime)
         zip.file(imageName, imageBlob)
         //
         const audioName = `${deckName}_${videoName}_${time.replace(".", "")}.mp3`
-        const { audioFile } = await extractAudio(flashcard.selectedStartTime || flashcard.originalStartTime, flashcard.selectedEndTime || flashcard.originalEndTime)
-        zip.file(audioName, audioFile!)
+        const { audioBlob } = await ffmpegService.extractAudio(flashcard.selectedStartTime || flashcard.originalStartTime, flashcard.selectedEndTime || flashcard.originalEndTime)
+        zip.file(audioName, audioBlob)
         //
         csvContent += `${videoName}_${time};`
         csvContent += `<img src="${imageName}">;`

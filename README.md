@@ -7,5 +7,7 @@
 
 
 
-
+- moving the -ss sped up the ffmpeg functions
+- but now we're getting runtime errors after about 37 cards.
+- try reloading ffmpeg on error???
 
