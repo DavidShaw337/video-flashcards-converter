@@ -8,10 +8,12 @@ interface IManualAIModal {
     setOpen: (o: boolean) => void
     flashcards: Flashcard[]
     flashcardIndex: number
-    setFlashcard: (f: Flashcard) => void
+    setFurigana: (furigana:string) => void
+    setTranslation: (translation:string) => void
+    setNotes: (notes:string) => void
 }
 
-const ManualAIModal: FunctionComponent<IManualAIModal> = ({ open, setOpen, flashcards, flashcardIndex, setFlashcard }) => {
+const ManualAIModal: FunctionComponent<IManualAIModal> = ({ open, setOpen, flashcards, flashcardIndex, setFurigana, setTranslation, setNotes }) => {
     const [responseText, setResponseText] = useState<string>("")
     const [copied, setCopied] = useState<boolean>(false)
 
@@ -118,7 +120,9 @@ const ManualAIModal: FunctionComponent<IManualAIModal> = ({ open, setOpen, flash
                     <button
                         onClick={() => {
                             const parsedResponse = parseResponse(responseText)
-                            setFlashcard({ ...flashcards[flashcardIndex], furigana: parsedResponse.furigana, translation: parsedResponse.translation, notes: parsedResponse.notes })
+                            setFurigana(parsedResponse.furigana)
+                            setTranslation(parsedResponse.translation)
+                            setNotes(parsedResponse.notes)
                             setOpen(false)
                         }}
                         style={{

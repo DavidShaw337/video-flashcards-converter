@@ -23,6 +23,10 @@ interface CardProps {
 const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcardIndex, setFlashcard }) => {
     const flashcard = flashcards[flashcardIndex]
     const [averageOffsets] = useState(() => getAverageOffsets(flashcards))
+    const [source, setSource] = useState(flashcard.source)
+    const [furigana, setFurigana] = useState(flashcard.furigana)
+    const [translation, setTranslation] = useState(flashcard.translation)
+    const [notes, setNotes] = useState(flashcard.notes)
     const furiganaQuery = useFuriganaQuery()
     const translationQuery = useTranslationQuery()
     const notesQuery = useNotesQuery()
@@ -39,10 +43,10 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
             //once the selected times are set, this hook will not run again for this card
         }
     }, [flashcards, flashcard, setFlashcard])
-    // Handle the change for source, furigana, and translation
-    const handleTextChange = (field: 'source' | 'furigana' | 'translation' | 'notes', value: string) => {
-        setFlashcard({ ...flashcard, [field]: value })
-    }
+    //
+    useEffect(() => {
+        setFlashcard({ ...flashcard, source, furigana, translation, notes })
+    }, [source, furigana, translation, notes])
     //these should get set almost immediately, so just don't render anything until they are set
     if (flashcard.selectedStartTime === undefined || flashcard.selectedEndTime === undefined || flashcard.selectedImageTime === undefined) {
         return null
@@ -73,13 +77,13 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <Button variant="primary"
                             onClick={() => {
                                 furiganaQuery.query(flashcard.source).then(furigana => {
-                                    if (furigana) setFlashcard({ ...flashcard, furigana })
+                                    if (furigana) setFurigana(furigana )
                                 })
                                 translationQuery.query(flashcard.source).then(translation => {
-                                    if (translation) setFlashcard({ ...flashcard, translation })
+                                    if (translation) setTranslation( translation )
                                 })
                                 notesQuery.query(flashcard.source).then(notes => {
-                                    if (notes) setFlashcard({ ...flashcard, notes })
+                                    if (notes) setNotes( notes )
                                 })
                             }}
                         >
@@ -90,8 +94,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <Form.Control
                             type="text"
                             as="textarea"
-                            value={flashcard.source}
-                            onChange={(event) => handleTextChange('source', event.target.value)}
+                            value={source||""}
+                            onChange={(event) => setSource(event.target.value)}
                             placeholder="Enter source"
                             style={{ height: "65px" }}
                         />
@@ -100,8 +104,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <h3>Furigana</h3>
                         <Button variant="primary"
                             onClick={async () => {
-                                const furigana = await furiganaQuery.query(flashcard.source)
-                                if (furigana) setFlashcard({ ...flashcard, furigana })
+                                const furigana = await furiganaQuery.query(source)
+                                if (furigana) setFurigana( furigana )
                             }}
                         >
                             Fill
@@ -110,8 +114,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                     <Form.Control
                         type="text"
                         as="textarea"
-                        value={flashcard.furigana}
-                        onChange={(event) => handleTextChange('furigana', event.target.value)}
+                        value={furigana||""}
+                        onChange={(event) => setFurigana(event.target.value)}
                         placeholder="Enter furigana"
                         style={{ height: "65px" }}
                     />
@@ -119,8 +123,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <h3>Translation</h3>
                         <Button variant="primary"
                             onClick={async () => {
-                                const translation = await translationQuery.query(flashcard.source)
-                                if (translation) setFlashcard({ ...flashcard, translation })
+                                const translation = await translationQuery.query(source)
+                                if (translation) setTranslation( translation )
                             }}
                         >
                             Fill
@@ -129,8 +133,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                     <Form.Control
                         type="text"
                         as="textarea"
-                        value={flashcard.translation}
-                        onChange={(event) => handleTextChange('translation', event.target.value)}
+                        value={translation||""}
+                        onChange={(event) => setTranslation( event.target.value)}
                         placeholder="Enter translation"
                         style={{ height: "65px" }}
                     />
@@ -138,8 +142,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <h3>Notes</h3>
                         <Button variant="primary"
                             onClick={async () => {
-                                const notes = await notesQuery.query(flashcard.source)
-                                if (notes) setFlashcard({ ...flashcard, notes })
+                                const notes = await notesQuery.query(source)
+                                if (notes) setNotes(notes)
                             }}
                         >
                             Fill
@@ -148,8 +152,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                     <Form.Control
                         type="text"
                         as="textarea"
-                        value={flashcard.notes}
-                        onChange={(event) => handleTextChange('notes', event.target.value)}
+                        value={notes||""}
+                        onChange={(event) => setNotes(event.target.value)}
                         placeholder="Enter notes"
                         style={{ height: "130px" }}
                     />
@@ -162,7 +166,7 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         </Col>
                     </Row>
                 </Col>
-                <ManualAIModal open={isModalOpen} setOpen={setIsModalOpen} flashcards={flashcards} flashcardIndex={flashcardIndex} setFlashcard={setFlashcard} />
+                <ManualAIModal open={isModalOpen} setOpen={setIsModalOpen} flashcards={flashcards} flashcardIndex={flashcardIndex} setFurigana={setFurigana} setTranslation={setTranslation} setNotes={setNotes}/>
             </Row>
         </div>
     )

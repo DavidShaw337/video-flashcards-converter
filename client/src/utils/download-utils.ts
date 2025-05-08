@@ -1,6 +1,7 @@
 import JSZip from "jszip"
 import { Flashcard } from "../data/interfaces"
 import { ffmpegService } from "../services/ffmpeg-service"
+import { formatAnkiFurigana } from "./furigana-utils"
 
 const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, videoName: string, sourceLanguage: string, setProgress: (p: number) => void) => {
     const zip = new JSZip()
@@ -41,7 +42,7 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
         csvContent += `[sound:${audioName}];`
         csvContent += `"${flashcard.source.replace(/"/g, '""')}";`
         if (sourceLanguage === "ja") {
-            csvContent += `"${(flashcard.furigana || "").replace(/"/g, '""')}";`
+            csvContent += `"${formatAnkiFurigana(flashcard.furigana || "").replace(/"/g, '""')}";`
         }
         csvContent += `"${(flashcard.translation || "").replace(/"/g, '""')}";`
         csvContent += `"${(flashcard.notes || "").replace(/"/g, '""')}"\n`
