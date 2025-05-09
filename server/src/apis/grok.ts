@@ -69,6 +69,12 @@ export default class GrokAPI {
         return data.choices[0].message.content
     }
     convertSourceToNotes = async (source: string) => {
+        const kanjiCount = source.split('').filter(char => char.match(/[\u4e00-\u9faf]/)).length;
+        // console.log(source + "---" + source.length + "---" + kanjiCount)
+        let phraseCount = "Choose the 3 least common words or phrases. "
+        if (source.length < 12 && kanjiCount < 6) phraseCount = "Choose the 2 least common words or phrases. "
+        if (source.length < 7 && kanjiCount < 4) phraseCount = "Choose the least common word or phrase. "
+        //
         const response = await fetch("https://api.x.ai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -80,7 +86,8 @@ export default class GrokAPI {
                     {
                         role: "system",
                         content: "You are a tool for generating study notes for Japanese subtitles. "
-                            + "Choose 2-3 phases from the subtitles and give a short explanation of each. "
+                            + phraseCount
+                            + "Give a definition for each, 2-7 words. "
                             // + "Focus on picking uncommon words or words used in uncommon ways, but don't commont on how common they are. "
                             + "Do not include super common words like 私, これ, 何, etc. "
                             // + "If the word is super common, then just give the meaning. "
