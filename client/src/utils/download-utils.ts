@@ -40,12 +40,12 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
         csvContent += `${videoName}_${time.toFixed(0).padStart(8, '0')};`
         csvContent += `<img src="${imageName}">;`
         csvContent += `[sound:${audioName}];`
-        csvContent += `"${flashcard.source.replace(/"/g, '""')}";`
+        csvContent += formatSource(flashcard.source) + ";"
         if (sourceLanguage === "ja") {
-            csvContent += `"${formatAnkiFurigana(flashcard.furigana || "").replace(/"/g, '""')}";`
+            csvContent += formatFurigana(flashcard.furigana || "") + ";"
         }
-        csvContent += `"${(flashcard.translation || "").replace(/"/g, '""')}";`
-        csvContent += `"${(flashcard.notes || "").replace(/"/g, '""')}"\n`
+        csvContent += formatTranslation(flashcard.translation || "") + ";"
+        csvContent += formatNotes(flashcard.notes || "") + "\n"
         setProgress((i + 1) / flashcards.length)
     }
     //
@@ -64,6 +64,35 @@ const downloadFlashcards = async (flashcards: Flashcard[], deckName: string, vid
     document.body.appendChild(a)
     a.click()
     a.remove()
+}
+
+const formatSource = (source: string) => {
+    source = source.replace(/\n/g, "<br/>")
+    source = source.replace(/"/g, '""')
+    source = `"${source}"`
+    return source
+}
+
+const formatFurigana = (furigana: string) => {
+    furigana = formatAnkiFurigana(furigana)
+    furigana = furigana.replace(/\n/g, "<br/>")
+    furigana = furigana.replace(/"/g, '""')
+    furigana = `"${furigana}"`
+    return furigana
+}
+
+const formatTranslation = (translation: string) => {
+    translation = translation.replace(/\n/g, "<br/>")
+    translation = translation.replace(/"/g, '""')
+    translation = `"${translation}"`
+    return translation
+}
+
+const formatNotes = (notes: string) => {
+    notes = notes.replace(/\n/g, "<br/>")
+    notes = notes.replace(/"/g, '""')
+    notes = `"${notes}"`
+    return notes
 }
 
 const getAnkiInstructions = (deckName: string, sourceLanguage: string) => {
