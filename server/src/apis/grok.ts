@@ -9,6 +9,11 @@ export default class GrokAPI {
     }
 
     convertSourceToFurigana = async (source: string) => {
+        const kanjiCount = source.split('').filter(char => char.match(/[\u4e00-\u9faf]/)).length || 0
+        if (kanjiCount === 0) {
+            console.log(`No Kanji found in ${source}`)
+            return source
+        }
         const response = await fetch("https://api.x.ai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -69,11 +74,12 @@ export default class GrokAPI {
         return data.choices[0].message.content
     }
     convertSourceToNotes = async (source: string) => {
-        const kanjiCount = source.split('').filter(char => char.match(/[\u4e00-\u9faf]/)).length;
+        const kanjiCount = source.split('').filter(char => char.match(/[\u4e00-\u9faf]/)).length || 0
         // console.log(source + "---" + source.length + "---" + kanjiCount)
-        let phraseCount = "Choose the 3 least common words or phrases. "
-        if (source.length < 12 && kanjiCount < 6) phraseCount = "Choose the 2 least common words or phrases. "
-        if (source.length < 7 && kanjiCount < 4) phraseCount = "Choose the least common word or phrase. "
+        if (source.length < 7 && kanjiCount < 4) {
+            return ""
+        }
+        const noteCount = source.length < 12 && kanjiCount < 6 ? 2 : 3
         //
         const response = await fetch("https://api.x.ai/v1/chat/completions", {
             method: "POST",
@@ -85,16 +91,15 @@ export default class GrokAPI {
                 messages: [
                     {
                         role: "system",
-                        content: "You are a tool for generating study notes for Japanese subtitles. "
-                            + phraseCount
+                        content: `Choose the ${noteCount} least common words or phrases from the given subtitles. `
                             + "Give a definition for each, 2-7 words. "
-                            // + "Focus on picking uncommon words or words used in uncommon ways, but don't commont on how common they are. "
+                            // + "Focus on picking uncommon words or words used in uncommon ways, but don't comment on how common they are. "
                             + "Do not include super common words like 私, これ, 何, etc. "
                             // + "If the word is super common, then just give the meaning. "
                             + "Format each note like this: \"世界 - world\". Don't add any line numbers. "
                             + "Each note should be on a separate line. There should be no other line breaks. "
-                        // + "The notes should be in the same order as the subtitles. "
-                        // + "You will only respond with the requested information."
+                            // + "The notes should be in the same order as the subtitles. "
+                            // + "You will only respond with the requested information."
                     },
                     {
                         role: "user",
