@@ -24,7 +24,7 @@ export default class GrokAPI {
                 messages: [
                     {
                         role: "system",
-                        content: "You are a tool for adding furigana to Japanese text. e.g. 私[わたし]は Make sure to add it to every Kanji character. You will only respond with the requested information."
+                        content: "You are a tool for adding furigana to Japanese text. e.g. 私[わたし]は Make sure to add furigana in square brackets to every word with a Kanji character. You will only respond with the requested information."
                     },
                     {
                         role: "user",
@@ -54,7 +54,11 @@ export default class GrokAPI {
                 messages: [
                     {
                         role: "system",
-                        content: "You are a tool for translating Japanese subtitles to English. Try to give a more literal translation without feeling too unnatural. You will only respond with the translation."
+                        content: "You are a tool for translating Japanese subtitles to English. "
+                            + "Try to give a more literal translation without feeling too unnatural. "
+                            + "Try to avoid using 's to indicate possesion when possible. "
+                            + "You will only respond with the translation. "
+                            + "Do not include any line breaks. "
                     },
                     {
                         role: "user",
@@ -76,7 +80,7 @@ export default class GrokAPI {
     convertSourceToNotes = async (source: string) => {
         const kanjiCount = source.split('').filter(char => char.match(/[\u4e00-\u9faf]/)).length || 0
         // console.log(source + "---" + source.length + "---" + kanjiCount)
-        if (source.length < 7 && kanjiCount < 4) {
+        if (source.length < 7 && kanjiCount < 3) {
             return ""
         }
         const noteCount = source.length < 12 && kanjiCount < 6 ? 2 : 3
@@ -98,8 +102,8 @@ export default class GrokAPI {
                             // + "If the word is super common, then just give the meaning. "
                             + "Format each note like this: \"世界 - world\". Don't add any line numbers. "
                             + "Each note should be on a separate line. There should be no other line breaks. "
-                            // + "The notes should be in the same order as the subtitles. "
-                            // + "You will only respond with the requested information."
+                        // + "The notes should be in the same order as the subtitles. "
+                        // + "You will only respond with the requested information."
                     },
                     {
                         role: "user",

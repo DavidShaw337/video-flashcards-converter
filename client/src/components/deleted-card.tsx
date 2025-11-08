@@ -16,7 +16,7 @@ const DeletedCard: FunctionComponent<CardProps> = ({ flashcard, setFlashcard }) 
                 </Button>
             </Col>
             <Col xs={5}>{flashcard.source}</Col>
-            <Col xs={6}>{flashcard.translation}</Col>
+            {/* <Col xs={6}>{flashcard.translation}</Col> */}
         </Row>
     )
 }
