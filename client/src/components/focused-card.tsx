@@ -1,18 +1,19 @@
 import type { FunctionComponent } from "react"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { Button, Col, Form, Row } from "react-bootstrap"
 import { Flashcard } from "../data/interfaces"
 import useFuriganaQuery from "../hooks/useFuriganaQuery"
 import useNotesQuery from "../hooks/useNotesQuery"
 import useTranslationQuery from "../hooks/useTranslationQuery"
+import { downloadFlashcards } from "../utils/download-utils"
 import { getAverageOffsets } from "../utils/flashcard-utils"
+import { AppContext } from "./app-context"
 import AudioTrimmer from "./audio-trimmer"
 import ManualAIModal from "./manual-ai-modal"
 import ScreenshotSelector from "./screenshot-selector"
 
 interface CardProps {
     video: File
-    flashcards: Flashcard[]
     flashcardIndex: number
     startOffset: React.RefObject<number>
     endOffset: React.RefObject<number>
@@ -20,7 +21,8 @@ interface CardProps {
     setFlashcard: (flashcard: Flashcard) => void
 }
 
-const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcardIndex, setFlashcard }) => {
+const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcardIndex, setFlashcard }) => {
+    const { sourceLanguage, deckName, videoName, flashcards } = useContext(AppContext)
     const flashcard = flashcards[flashcardIndex]
     const [averageOffsets] = useState(() => getAverageOffsets(flashcards))
     const [source, setSource] = useState(flashcard.source)
@@ -77,13 +79,13 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <Button variant="primary"
                             onClick={() => {
                                 furiganaQuery.query(flashcard.source).then(furigana => {
-                                    if (furigana) setFurigana(furigana )
+                                    if (furigana) setFurigana(furigana)
                                 })
                                 translationQuery.query(flashcard.source).then(translation => {
-                                    if (translation) setTranslation( translation )
+                                    if (translation) setTranslation(translation)
                                 })
                                 notesQuery.query(flashcard.source).then(notes => {
-                                    if (notes) setNotes( notes )
+                                    if (notes) setNotes(notes)
                                 })
                             }}
                         >
@@ -94,7 +96,7 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <Form.Control
                             type="text"
                             as="textarea"
-                            value={source||""}
+                            value={source || ""}
                             onChange={(event) => setSource(event.target.value)}
                             placeholder="Enter source"
                             style={{ height: "65px" }}
@@ -105,7 +107,7 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <Button variant="primary"
                             onClick={async () => {
                                 const furigana = await furiganaQuery.query(source)
-                                if (furigana) setFurigana( furigana )
+                                if (furigana) setFurigana(furigana)
                             }}
                         >
                             Fill
@@ -114,7 +116,7 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                     <Form.Control
                         type="text"
                         as="textarea"
-                        value={furigana||""}
+                        value={furigana || ""}
                         onChange={(event) => setFurigana(event.target.value)}
                         placeholder="Enter furigana"
                         style={{ height: "65px" }}
@@ -124,7 +126,7 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                         <Button variant="primary"
                             onClick={async () => {
                                 const translation = await translationQuery.query(source)
-                                if (translation) setTranslation( translation )
+                                if (translation) setTranslation(translation)
                             }}
                         >
                             Fill
@@ -133,8 +135,8 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                     <Form.Control
                         type="text"
                         as="textarea"
-                        value={translation||""}
-                        onChange={(event) => setTranslation( event.target.value)}
+                        value={translation || ""}
+                        onChange={(event) => setTranslation(event.target.value)}
                         placeholder="Enter translation"
                         style={{ height: "65px" }}
                     />
@@ -152,21 +154,25 @@ const FocusedCard: FunctionComponent<CardProps> = ({ video, flashcards, flashcar
                     <Form.Control
                         type="text"
                         as="textarea"
-                        value={notes||""}
+                        value={notes || ""}
                         onChange={(event) => setNotes(event.target.value)}
                         placeholder="Enter notes"
                         style={{ height: "130px" }}
                     />
                     <Row className="mt-2">
-                        <Col>
+                        <Col xs="auto">
                             <Button variant="primary" onClick={() => setIsModalOpen(!isModalOpen)} >Ask AI Manually</Button>
                         </Col>
-                        <Col>
+                        <Col xs="auto">
                             <Button variant="danger" onClick={() => setFlashcard({ ...flashcard, isDeleted: true })}>Delete</Button>
+                        </Col>
+                        <Col />
+                        <Col xs="auto">
+                            <Button variant="info" onClick={() => downloadFlashcards([flashcard], deckName, videoName, sourceLanguage, p => { })} >Download</Button>
                         </Col>
                     </Row>
                 </Col>
-                <ManualAIModal open={isModalOpen} setOpen={setIsModalOpen} flashcards={flashcards} flashcardIndex={flashcardIndex} setFurigana={setFurigana} setTranslation={setTranslation} setNotes={setNotes}/>
+                <ManualAIModal open={isModalOpen} setOpen={setIsModalOpen} flashcards={flashcards} flashcardIndex={flashcardIndex} setFurigana={setFurigana} setTranslation={setTranslation} setNotes={setNotes} />
             </Row>
         </div>
     )

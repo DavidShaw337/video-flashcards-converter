@@ -16,6 +16,4 @@
 
 - add option to play audio without changing any times
 
-- add option to download a single card directly
-
 - add manual AI import options

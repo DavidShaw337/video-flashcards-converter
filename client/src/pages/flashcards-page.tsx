@@ -40,7 +40,6 @@ const FlashcardsPage = () => {
                                     <ListGroup.Item>
                                         <FocusedCard
                                             video={videoFile}
-                                            flashcards={flashcards}
                                             flashcardIndex={index}
                                             startOffset={startOffset}
                                             endOffset={endOffset}
